@@ -1,0 +1,7 @@
+*~
+*.swp
+.includepath
+.project
+.settings
+.metadata
+*.log
