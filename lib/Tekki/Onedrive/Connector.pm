@@ -67,6 +67,7 @@ sub authenticate ($self) {
   my $tx = $ua->post($globals->value('token_url'), form => \%form);
   die $self->_error($tx) if $tx->error;
   my $response = $tx->success->json;
+  say 'Authentication successful.' if $self->verbose;
 
   # update config
   $config->value($_, $response->{$_}) for qw|scope access_token refresh_token|;
@@ -76,8 +77,7 @@ sub authenticate ($self) {
 
     # get list of available drives
     my $ua  = Mojo::UserAgent->new;
-    my $url = $config->value('drive_url')
-      || $globals->value('drive_url') . '/me/drives';
+    my $url = $globals->value('drive_url') . '/me/drives';
     my $tx
       = $ua->get($url, {Authorization => "Bearer $response->{access_token}"});
     die $self->_error($tx) if $tx->error;
@@ -94,9 +94,8 @@ sub authenticate ($self) {
     my $drive = $drives[$in - 1];
 
     # set config data
-    $config->value('drive_id', $drive->{id});
-    $config->value('drive_url',
-      $globals->value('drive_url') . "/drives/$drive->{id}");
+    $config->value('drive_id',   $drive->{id});
+    $config->value('drive_url',  $globals->value('drive_url') . '/me/drive');
     $config->value('drive_type', $drive->{driveType});
     $config->value('owner',      $drive->{owner}->{user}->{displayName});
 
@@ -107,6 +106,7 @@ sub authenticate ($self) {
     $config->value('description', $in || $description);
   }
   $config->save;
+  say 'Config written.' if $self->verbose;
 
   return $self;
 }
@@ -121,6 +121,7 @@ sub logout ($self) {
 
 sub synchronize ($self) {
   my $config = Tekki::Onedrive::Config->new($self->destination);
+  die 'Not authenticated' unless $config->value('refresh_token');
 
   my $db = Tekki::Onedrive::Database->new($self->destination);
 
@@ -262,28 +263,21 @@ sub _download_content ($self, $item, $path, $config) {
     return;
   }
 
-  my $ua     = Mojo::UserAgent->new;
-  my $repeat = 2;
-  while ($repeat) {
-    my $tx = $ua->get($item->download_url);
-    if ($tx->error) {
-      if ($tx->error->{code} == 404 && --$repeat > 0) {
+  my $ua    = Mojo::UserAgent->new->max_redirects(2);
+  my $token = $self->_get_token($config);
 
-        # get new download URL and try again
-        my $token = $self->_get_token($config);
-        $tx = $ua->get($config->value('drive_url') . "/items/$item->{id}",
-          {Authorization => "Bearer $token"});
-        if (my $response = $tx->success) {
-          $item->update($response->json);
-          next;
-        }
-      }
-      die $self->_error($tx);
-    }
+  my $url = $config->value('drive_url') . "/items/$item->{id}/content";
+  my $tx = $ua->get($url, {Authorization => "Bearer $token"});
+  die $self->_error($tx) if $tx->error;
 
-    $tx->success->content->asset->move_to($path);
-    $repeat = 0;
-  }
+#  my $asset_size = $tx->success->content->asset->size;
+#  die "Size of $item->{name} is $asset_size instead of $item->{size}!"
+#    if $asset_size != $item->size;
+
+  $tx->success->content->asset->move_to($path);
+
+  die "Download of $item->{name} failed!"
+    unless $item->exists_identical;
 
   say '  content downloaded' if $self->verbose;
 }

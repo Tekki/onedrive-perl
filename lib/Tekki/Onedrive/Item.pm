@@ -20,8 +20,8 @@ sub new ($class, $content) {
 # methods
 
 has [qw|id ctag etag lastmodified name|];
-has [qw|download_url modifiedby package parent_id parent_path sha1|] => '';
-has [qw|deleted file folder root|] => 0;
+has [qw|modifiedby package parent_id parent_path sha1|] => '';
+has [qw|deleted file folder remote root size|] => 0;
 
 sub exists ($self) {
   if ($self->file) {
@@ -33,8 +33,8 @@ sub exists ($self) {
 
 sub exists_identical ($self) {
   if ($self->file) {
-    return $self->exists && sha1_hex($self->full_path->slurp) eq $self->sha1
-      || 0;
+    return $self->exists
+      && sha1_hex($self->full_path->slurp) eq $self->sha1 ? 1 : 0;
   } else {
     return $self->exists;
   }
@@ -60,7 +60,14 @@ sub update ($self, $content) {
   $self->lastmodified($content->{lastModifiedDateTime});
   $self->modifiedby($content->{lastModifiedBy}->{user}->{displayName});
 
-  $self->$_($content->{$_} ? 1 : 0) for qw|file folder package|;
+  if ($content->{remoteItem}) {
+    $self->$_($content->{remoteItem}->{$_} ? 1 : 0) for qw|file folder package|;
+    $self->size($content->{remoteItem}->{size} || 0);
+    $self->remote(1);
+  } else {
+    $self->$_($content->{$_} ? 1 : 0) for qw|file folder package|;
+    $self->size($content->{size} || 0);
+  }
 
   $self->ctag($content->{cTag} || '');
   $self->etag($content->{eTag} || '');
@@ -68,7 +75,6 @@ sub update ($self, $content) {
     if ($file->{hashes}) {
       $self->sha1(lc $file->{hashes}->{sha1Hash})
         if $file->{hashes}->{sha1Hash};
-      $self->download_url($content->{'@microsoft.graph.downloadUrl'} || '')
     } else {
       $self->deleted(1);
     }

@@ -1,6 +1,6 @@
 use Mojo::Base -strict;
 
-use Test::More tests => 52;
+use Test::More tests => 56;
 
 use Mojo::File;
 use Mojo::JSON 'decode_json';
@@ -30,7 +30,7 @@ isa_ok $package, $parent;
 
 can_ok $package, $_
   for qw|id ctag etag lastmodified name parent_id parent_path|,
-  qw|download_url modifiedby sha1 deleted file folder package|,
+  qw|modifiedby sha1 deleted file folder package remote root size|,
   qw|exists exists_identical full_path mtime update update_mtime|;
 
 # temp dir
@@ -120,6 +120,16 @@ ok $item = $package->new($testitem{file1_deleted}{json}), 'Deleted file';
 subtest 'Content of item' => sub {
   is $item->$_, $expected{$_}, "$_ is $expected{$_}" for sort keys %expected;
 };
+
+# remote folder
+
+ok $item = $package->new($testitem{remote_folder}{json}), 'Remote folder';
+%expected = $testitem{remote_folder}{content}->%*;
+
+subtest 'Content of item' => sub {
+  is $item->$_, $expected{$_}, "$_ is $expected{$_}" for sort keys %expected;
+};
+
 
 # cleanup
 
