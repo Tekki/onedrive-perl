@@ -37,7 +37,7 @@ Next you need the most recent versions of the following Perl modules:
   * Mojolicious
   * Mojo::SQLite
 
-Don't use the outdated packages included in your distribution, instead install them with
+Don't use the outdated packages included in your distribution, instead install them from CPAN with
 
     cpanm Config::Tiny Data::Dump Mojolicious Mojo::SQLite
 
