@@ -2,7 +2,7 @@ use Mojo::Base -strict;
 use feature 'signatures';
 no warnings 'experimental::signatures';
 
-use Test::More tests => 112;
+use Test::More tests => 122;
 
 use Mojo::File;
 use Mojo::JSON 'decode_json';
@@ -11,8 +11,8 @@ use Tekki::Onedrive::Item;
 
 # test values
 
-my %testitem = eval Mojo::File::path(__FILE__)->sibling('testitem_personal.pl')
-  ->slurp;
+my %testitem
+  = eval Mojo::File::path(__FILE__)->sibling('testitem_personal.pl')->slurp;
 
 # package
 
@@ -30,10 +30,10 @@ isa_ok $package, $parent;
 
 # constants
 
-my @fields = qw|ctag etag lastmodified name parent_id parent_path
-  modifiedby sha1 file folder package|;
+my @fields = qw|ctag etag file folder lastmodified modifiedby name
+  package parent_id remote sha1|;
 
-is_deeply $package->FIELDS, \@fields, 'List of item fields';
+is_deeply $package->ITEM_FIELDS, \@fields, 'List of item fields';
 
 # methods
 
@@ -50,7 +50,8 @@ ok my $db = $package->new($tempdir);
 
 my @tasks = map { $testitem{$_}{json} }
   qw|folder1 folder2 file1_deleted file1 folder2 package1
-  file1_updated file1_renamed file1_moved file1_deleted|;
+  file1_updated file1_renamed file1_moved folder1_renamed
+  file1_moved_again file1_deleted|;
 my $counter = @tasks;
 
 is $db->add_tasks(\@tasks), $counter, "$counter tasks added";
@@ -144,7 +145,6 @@ ok $actions = $db->find_differences($item), 'Find differences';
 is_deeply $actions, {}, 'No action';
 
 is $db->task_ignored($task, $item), $db, 'Log entry';
-push $log_entries{ignored}->@*, $log_entry->($item, 'ignored');
 
 # create file fails
 
@@ -203,7 +203,6 @@ ok $actions = $db->find_differences($item), 'Find differences';
 is_deeply $actions, {}, 'No action';
 
 is $db->task_ignored($task, $item), $db, 'Log entry';
-push $log_entries{ignored}->@*, $log_entry->($item, 'ignored');
 
 # create package
 
@@ -306,8 +305,64 @@ ok $actions = $db->find_differences($item), 'Find differences';
 is_deeply $actions, \%expected, 'Action description';
 
 is $db->update_item($item), $db, 'Update item in db';
-is $db->task_succeeded($task, $item, 'update'), $db, 'Log entry';
-push $log_entries{success}->@*, $log_entry->($item, 'update');
+is $db->task_succeeded($task, $item, 'move'), $db, 'Log entry';
+push $log_entries{success}->@*, $log_entry->($item, 'move');
+
+# rename first folder
+
+ok $task = $db->next_task, 'Get next task';
+ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+
+%expected = $testitem{folder1_renamed}{content}->%*;
+
+subtest 'Content of item' => sub {
+  is $item->$_, $expected{$_}, "$_ is $expected{$_}" for sort keys %expected;
+};
+
+ok $actions = $db->find_differences($item), 'Find differences';
+use Data::Dump 'dd'; dd $actions; #exit;
+%expected = (
+  move => {
+    new_name        => 'Documents',
+    new_parent_path => '',
+    new_path        => 'Documents',
+    old_path        => 'Dokumente',
+  }
+);
+
+is_deeply $actions, \%expected, 'Action description';
+
+is $db->update_item($item), $db, 'Update item in db';
+is $db->task_succeeded($task, $item, 'move'), $db, 'Log entry';
+push $log_entries{success}->@*, $log_entry->($item, 'move');
+
+# move file again
+
+ok $task = $db->next_task, 'Get next task';
+ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+
+%expected = $testitem{file1_moved_again}{content}->%*;
+
+subtest 'Content of item' => sub {
+  is $item->$_, $expected{$_}, "$_ is $expected{$_}" for sort keys %expected;
+};
+
+ok $actions = $db->find_differences($item), 'Find differences';
+
+%expected = (
+  move => {
+    new_name        => 'Testdocument Renamed.txt',
+    new_parent_path => 'Documents/Vorlagen',
+    new_path        => 'Documents/Vorlagen/Testdocument Renamed.txt',
+    old_path        => 'Documents/Testdocument Renamed.txt',
+  }
+);
+
+is_deeply $actions, \%expected, 'Action description';
+
+is $db->update_item($item), $db, 'Update item in db';
+is $db->task_succeeded($task, $item, 'move'), $db, 'Log entry';
+push $log_entries{success}->@*, $log_entry->($item, 'move');
 
 # delete file
 
@@ -322,7 +377,7 @@ subtest 'Content of item' => sub {
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
-%expected = (delete => {full_path => 'Dokumente/Testdocument Renamed.txt',});
+%expected = (delete => {full_path => 'Documents/Vorlagen/Testdocument Renamed.txt',});
 
 is_deeply $actions, \%expected, 'Action description';
 
@@ -340,14 +395,14 @@ ok !$db->next_task, 'No more tasks';
 ok my $log = $db->log(''), 'Get log';
 
 ok $log->{$_}, "Log has param $_ ($log->{$_})" for qw|log_from log_to|;
-for my $result (qw|success error ignored|) {
+for my $result (qw|success error|) {
   ok $log->{$result}, "Log contains data for $result";
   my $count = $log_entries{$result}->@*;
   is $log->{"${result}count"}, $count, "$result count is $count";
 }
 
 ok $log = $db->log(Mojo::Date->new->to_datetime), 'Future log';
-for my $result (qw|success error ignored|) {
+for my $result (qw|success error|) {
   ok $log->{$result}, "Log contains data for $result";
   ok !$log->{"${result}count"}, "$result count is 0";
 }

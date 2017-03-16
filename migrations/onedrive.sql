@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS item (
   item_id TEXT NOT NULL,
   name TEXT NOT NULL,
   parent_id TEXT,
-  parent_path TEXT NOT NULL,
   etag TEXT NOT NULL,
   ctag TEXT,
   sha1 TEXT,
@@ -12,7 +11,8 @@ CREATE TABLE IF NOT EXISTS item (
   modifiedby TEXT NOT NULL,
   folder INTEGER,
   file INTEGER,
-  package INTEGER
+  package INTEGER,
+  remote INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS log (

@@ -11,9 +11,9 @@ use Mojo::SQLite;
 # constants
 
 use constant {
-  FIELDS => [
-    qw|ctag etag lastmodified name parent_id parent_path|,
-    qw|modifiedby sha1 file folder package|,
+  ITEM_FIELDS => [
+    qw|ctag etag file folder lastmodified modifiedby name|,
+    qw|package parent_id remote sha1|,
   ],
 };
 
@@ -22,11 +22,10 @@ use constant {
 sub new ($class, $destination) {
   my $self = bless {}, $class;
 
-  my $config_path = Mojo::File::path($destination, 'config')->make_path;
+  my $config_path = path($destination, 'config')->make_path;
   my $db = Mojo::SQLite->new("$config_path/onedrive.db");
   $db->migrations->from_file(
-    path(__FILE__)->dirname . '/../../../migrations/onedrive.sql')
-    ->migrate;
+    path(__FILE__)->dirname . '/../../../migrations/onedrive.sql')->migrate;
 
   $self->{db} = $db;
   $self->handle($db->db);
@@ -54,7 +53,7 @@ sub create_item ($self, $item) {
   my $db = $self->handle;
 
   my %params = (item_id => $item->id);
-  $params{$_} = $item->$_ for $self->FIELDS->@*;
+  $params{$_} = $item->$_ for $self->ITEM_FIELDS->@*;
   $db->insert('item', \%params);
 
   return $self;
@@ -74,32 +73,25 @@ sub find_differences ($self, $item) {
     # existing item
     if ($item->deleted) {
       $actions{delete} = {full_path => $item->full_path};
-    } else {
+
+    } elsif ($db_item->{full_path} ne $item->full_path) {
 
       # path and name
-      if ( $db_item->{name} ne $item->name
-        || $db_item->{parent_path} ne $item->parent_path)
-      {
-        $actions{move} = {
-          new_name        => $item->name,
-          new_parent_path => $item->parent_path,
-          new_path        => $item->full_path,
-          old_path =>
-            Mojo::File::path($db_item->{parent_path}, $db_item->{name}),
-          }
-      }
-
-      # content
-      if ($db_item->{ctag} ne $item->ctag) {
-
-        if ($item->folder || $item->package) {
-          $actions{update_db} = 1;
-        } else {
-          $actions{update} = {full_path => $item->full_path};
+      $actions{move} = {
+        new_name        => $item->name,
+        new_parent_path => $item->parent_path,
+        new_path        => $item->full_path,
+        old_path        => $db_item->{full_path},
         }
 
-      }
+    } elsif ($db_item->{ctag} ne $item->ctag) {
 
+      # content
+      if ($item->folder || $item->package) {
+        $actions{update_db} = 1;
+      } else {
+        $actions{update} = {full_path => $item->full_path};
+      }
     }
   } elsif (!$item->deleted) {
 
@@ -115,7 +107,22 @@ sub find_differences ($self, $item) {
 
 sub find_item ($self, $item) {
   my $db = $self->handle;
-  return $db->select('item', '*', {item_id => $item->{id}})->hash;
+  my $rv = $db->select('item', '*', {item_id => $item->{id}})->hash or return;
+
+  my @path;
+  my $parent = {name => $rv->{name}, parent_id => $rv->{parent_id}};
+  while (1) {
+    unshift @path, $parent->{name};
+    $parent = $db->select(
+      'item',
+      ['name', 'parent_id'],
+      {item_id => $parent->{parent_id}}
+    )->hash;
+    last unless $parent->{parent_id};
+  }
+  $rv->{full_path} = path(@path);
+
+  return $rv;
 }
 
 sub log ($self, $since) {
@@ -129,7 +136,7 @@ sub log ($self, $since) {
   };
   my @since;
   if ($since) {
-    @since =  (timestamp => {'>' => $since});
+    @since = (timestamp => {'>' => $since});
     $rv->{log_from} = $since;
   } else {
     @since = ();
@@ -142,7 +149,7 @@ sub log ($self, $since) {
   }
 
   for my $result (qw|success error ignored|) {
-    $rv->{"${result}count"} =  $rv->{$result}->@*;
+    $rv->{"${result}count"} = $rv->{$result}->@*;
   }
 
   return $rv;
@@ -175,17 +182,18 @@ sub task_failed ($self, $task, $item, $action) {
 
 sub task_ignored ($self, $task, $item) {
   my $db = $self->handle;
-  $db->insert(
-    'log',
-    {
-      timestamp    => Mojo::Date->new->to_datetime,
-      item_id      => $item->id,
-      name         => $item->name,
-      lastmodified => $item->lastmodified,
-      modifiedby   => $item->modifiedby,
-      result       => 'ignored',
-    }
-  );
+
+#  $db->insert(
+#    'log',
+#    {
+#      timestamp    => Mojo::Date->new->to_datetime,
+#      item_id      => $item->id,
+#      name         => $item->name,
+#      lastmodified => $item->lastmodified,
+#      modifiedby   => $item->modifiedby,
+#      result       => 'ignored',
+#    }
+#  );
   $db->delete('task', {id => $task->{id}});
   return $self;
 }
@@ -214,7 +222,7 @@ sub update_item ($self, $item) {
 
 
   my %params = ();
-  $params{$_} = $item->$_ for $self->FIELDS->@*;
+  $params{$_} = $item->$_ for $self->ITEM_FIELDS->@*;
   $db->update('item', \%params, {item_id => $item->{id}});
 
   return $self;
