@@ -33,14 +33,13 @@ OneDrive-Perl needs Perl 5.24.0 or highter. It is recommended to use a [Perlbrew
     perlbrew switch 5.24.1
 
 Next you need the most recent versions of the following Perl modules:
-  * Config::Tiny
   * Data::Dump
   * Mojolicious
   * Mojo::SQLite
 
 Don't use the outdated packages included in your distribution, instead install them from CPAN with
 
-    cpanm Config::Tiny Data::Dump Mojolicious Mojo::SQLite
+    cpanm Data::Dump Mojolicious Mojo::SQLite
 
 Now you can install OneDrive-Perl.
 

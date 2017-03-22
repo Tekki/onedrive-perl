@@ -4,24 +4,33 @@ use Mojo::Base -base;
 use feature 'signatures';
 no warnings 'experimental::signatures';
 
-use Config::Tiny;
 use Mojo::Date;
 use Mojo::File 'path';
+use Mojo::Util qw|decode encode|;
+
+# constants
+
+use constant {
+  CONFIG_VARS => [
+    qw|access_token delta_link description drive_id drive_type drive_url
+      item_id next_link owner refresh_token remote scope validto|
+  ],
+};
 
 # constructor
 
 sub new ($class, $destination) {
-
-  my $self = bless {}, $class;
+  my $self = {};
+  bless $self, $class;
 
   my $config_path = path($destination, 'config')->make_path;
-  my $configfile = "$config_path/onedrive.conf";
+  my $configfile = $config_path->child('onedrive.conf');
   $self->configfile($configfile);
 
   if (-f $configfile) {
-    $self->content(Config::Tiny->read($configfile, 'utf8'));
-  } else {
-    $self->content(Config::Tiny->read_string(q|description=|));
+    my %config = map { split /=/, $_, 2 } split /\r?\n/,
+      decode('UTF-8', $configfile->slurp);
+    $self->$_($config{$_} || '') for CONFIG_VARS->@*;
   }
 
   return $self;
@@ -29,25 +38,26 @@ sub new ($class, $destination) {
 
 # methods
 
-has ['configfile', 'content'];
+has [
+  qw|access_token configfile description drive_id drive_type drive_url
+    item_id owner refresh_token remote scope validto|
+];
 
 sub delta_link ($self, $newvalue = undef) {
   if (defined $newvalue) {
-    delete $self->content->{_}->{next_link};
-    $self->value('delta_link', $newvalue)->save;
-    return $self;
+    delete $self->{next_link};
+    $self->{delta_link} = $newvalue;
+    return $self->save;
   } else {
     my $rv;
-    if ($self->value('delta_link')) {
-      $rv = $self->value('delta_link');
-    } elsif ($self->value('remote')) {
-      $rv
-        = $self->value('drive_url')
-        . '/items/'
-        . $self->value('item_id')
-        . '/delta';
+    if ($self->{next_link}) {
+      $rv = '';
+    } elsif (exists $self->{delta_link}) {
+      $rv = $self->{delta_link};
+    } elsif ($self->remote) {
+      $rv = $self->drive_url . '/items/' . $self->item_id . '/delta';
     } else {
-      $rv = $self->value('drive_url') . '/root/delta';
+      $rv = $self->drive_url . '/root/delta';
     }
     return $rv;
   }
@@ -55,39 +65,29 @@ sub delta_link ($self, $newvalue = undef) {
 
 sub expires_in ($self, $seconds = undef) {
   if (defined $seconds) {
-    $self->value(validto => Mojo::Date->new(time + $seconds)->to_datetime);
+    $self->validto(Mojo::Date->new(time + $seconds)->to_datetime);
     return $self;
   } else {
-    return Mojo::Date->new($self->value('validto'))->epoch - time;
+    return Mojo::Date->new($self->validto)->epoch - time;
   }
 }
 
 sub next_link ($self, $newvalue = undef) {
   if (defined $newvalue) {
-    delete $self->content->{_}->{delta_link};
-    $self->value('next_link', $newvalue)->save;
-    return $self;
+    delete $self->{delta_link};
+    $self->{next_link} = $newvalue;
+    return $self->save;
   } else {
-    return $self->value('next_link');
+    return $self->{next_link};
   }
 }
 
 sub save ($self) {
-  $self->content->write($self->configfile, 'utf8');
+  $self->configfile->spurt(
+    encode 'UTF-8', join "\n",
+    map { "$_=" . ($self->$_ || '') } CONFIG_VARS->@*
+  );
   return $self;
-}
-
-sub value ($self, $key, $value = undef) {
-  if (defined $value) {
-    $self->content->{_}->{$key} = $value;
-    return $self;
-  } else {
-    return $self->content->{_}->{$key};
-  }
-}
-
-sub values ($self) {
-  return $self->content->{_};
 }
 
 1;

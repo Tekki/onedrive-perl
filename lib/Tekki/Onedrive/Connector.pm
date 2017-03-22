@@ -38,8 +38,7 @@ sub authenticate ($self) {
   $path->child($_)->make_path for qw|config documents|;
 
   # config
-  my $config        = Tekki::Onedrive::Config->new($path);
-  my $config_values = $config->values;
+  my $config = Tekki::Onedrive::Config->new($path);
 
   # get authorization code
   my $url = Mojo::URL->new($globals->value('auth_url'))->query(
@@ -61,7 +60,6 @@ sub authenticate ($self) {
   my %form = (
     client_id     => $globals->value('client_id'),
     redirect_uri  => $globals->value('redirect_uri'),
-    client_secret => $globals->value('client_secret'),
     code          => $code,
     grant_type    => 'authorization_code',
   );
@@ -71,10 +69,10 @@ sub authenticate ($self) {
   say 'Authentication successful.' if $self->verbose;
 
   # update config
-  $config->value($_, $response->{$_}) for qw|scope access_token refresh_token|;
+  $config->$_($response->{$_}) for qw|scope access_token refresh_token|;
   $config->expires_in($response->{expires_in});
 
-  unless ($config->value('drive_id')) {
+  unless ($config->drive_id) {
 
     # list of available drives
     my @drives;
@@ -88,8 +86,8 @@ sub authenticate ($self) {
     die $self->_error($tx) if $tx->error;
     my $own        = $tx->success->json;
     my $drive_type = $own->{driveType};
-    $own->{description}
-      = "$own->{owner}->{user}->{displayName} / OneDrive " . ucfirst $drive_type;
+    $own->{description} = "$own->{owner}->{user}->{displayName} / OneDrive "
+      . ucfirst $drive_type;
     push @drives, $own;
 
     # shared with me
@@ -117,27 +115,26 @@ sub authenticate ($self) {
 
     # set config data
     print encode 'UTF-8', "Description [$drive->{description}]: ";
-    chomp($in = decode 'UTF-8', <STDIN>);
-    $config->value('description', $in || $drive->{description});
-    $config->value('drive_type', $drive_type);
+    chomp($in = <STDIN>);
+    $in = decode 'UTF-8', $in;
+    $config->description($in || $drive->{description});
+    $config->drive_type($drive_type);
     if (my $remote = $drive->{remoteItem}) {
 
       # shared folder
-      $config->value('item_id',  $remote->{id});
-      $config->value('drive_id', $remote->{parentReference}->{driveId});
-      $config->value(
-        'drive_url', $globals->value('drive_url') .
-          "/drives/$remote->{parentReference}->{driveId}"
-      );
-      $config->value('owner',  $remote->{createdBy}->{user}->{displayName});
-      $config->value('remote', 1);
+      $config->item_id($remote->{id});
+      $config->drive_id($remote->{parentReference}->{driveId});
+      $config->drive_url($globals->value('drive_url')
+          . "/drives/$remote->{parentReference}->{driveId}");
+      $config->owner($remote->{createdBy}->{user}->{displayName});
+      $config->remote(1);
 
     } else {
 
       # my own drive
-      $config->value('drive_id',  $drive->{id});
-      $config->value('drive_url', $globals->value('drive_url') . '/me/drive');
-      $config->value('owner',     $drive->{owner}->{user}->{displayName});
+      $config->drive_id($drive->{id});
+      $config->drive_url($globals->value('drive_url') . '/me/drive');
+      $config->owner($drive->{owner}->{user}->{displayName});
 
     }
 
@@ -150,7 +147,7 @@ sub authenticate ($self) {
 
 sub logout ($self) {
   my $config = Tekki::Onedrive::Config->new($self->destination);
-  $config->value($_, '') for qw|access_token refresh_token scope validto|;
+  $config->$_('') for qw|access_token refresh_token scope validto|;
   $config->save;
 
   return $self;
@@ -158,7 +155,7 @@ sub logout ($self) {
 
 sub synchronize ($self) {
   my $config = Tekki::Onedrive::Config->new($self->destination);
-  die 'Not authenticated' unless $config->value('refresh_token');
+  die 'Not authenticated' unless $config->refresh_token;
 
   my $db = Tekki::Onedrive::Database->new($self->destination);
 
@@ -303,7 +300,7 @@ sub _download_content ($self, $item, $path, $config) {
   my $ua    = Mojo::UserAgent->new->max_redirects(2);
   my $token = $self->_get_token($config);
 
-  my $url = $config->value('drive_url') . "/items/$item->{id}/content";
+  my $url = $config->drive_url . "/items/$item->{id}/content";
   my $tx = $ua->get($url, {Authorization => "Bearer $token"});
   die $self->_error($tx) if $tx->error;
 
@@ -345,18 +342,18 @@ sub _get_token ($self, $config) {
     my %form = (
       client_id     => $globals->value('client_id'),
       redirect_uri  => $globals->value('redirect_uri'),
-      refresh_token => $config->value('refresh_token'),
+      refresh_token => $config->refresh_token,
       grant_type    => 'refresh_token',
     );
     my $tx = $ua->post($url, form => \%form);
     die $self->_error($tx) if $tx->error;
     my $response = $tx->success->json;
-    $config->value($_, $response->{$_})
+    $config->$_($response->{$_})
       for qw|scope access_token refresh_token|;
 
     $config->expires_in($response->{expires_in})->save;
   }
-  return $config->value('access_token');
+  return $config->access_token;
 }
 
 1;

@@ -10,11 +10,12 @@ use Tekki::Onedrive::Connector;
 
 getopt
   'a|auth'    => \my $auth,
+  'd|debug'   => \my $debug,
   'h|help'    => \my $help,
   's|sync'    => \my $sync,
   'v|verbose' => \my $verbose,
   'x|logout'  => \my $logout,
-  't|test' => \my $test;
+  't|test'    => \my $test;
 
 die extract_usage if $help;
 
