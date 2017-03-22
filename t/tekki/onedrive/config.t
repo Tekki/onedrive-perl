@@ -21,8 +21,8 @@ isa_ok $package, $parent;
 # constants
 
 my @config_vars
-  = qw|access_token delta_link description drive_id drive_type drive_url
-  item_id next_link owner refresh_token remote scope validto|;
+  = qw|access_token description drive_id drive_type drive_url
+  item_id owner refresh_token remote scope validto next_link delta_link|;
 
 is_deeply $package->CONFIG_VARS, [@config_vars], 'Config vars';
 
@@ -37,6 +37,7 @@ ok my $config = $package->new($tempdir), 'Create empty config';
 
 my %sample_config = (
   access_token  => 'Access token',
+  delta_link    => 'A delta link',
   description   => 'Description with äöüóúőí',
   drive_id      => 'Drive ID',
   drive_type    => 'Drive type',
@@ -68,8 +69,9 @@ subtest 'Check values' => sub {
 
 # delta and next link
 
+delete $config->{delta_link};
 is $config->delta_link, "$sample_config{drive_url}/root/delta",
-  'Delta link for own drive';
+  'Default delta link for own drive';
 
 is $config->remote(1), $config, 'Set remote';
 is $config->delta_link,
@@ -77,7 +79,7 @@ is $config->delta_link,
   'Delta link for remote item';
 
 my $delta_link = 'Delta link';
-my $next_link = 'Next link';
+my $next_link  = 'Next link';
 
 is $config->delta_link($delta_link), $config, 'Set delta link';
 is $config->delta_link, $delta_link, "Delta link is $delta_link";
@@ -94,4 +96,5 @@ ok !$config->next_link, 'No next link';
 # expires and valid to
 
 is $config->expires_in(3600), $config, 'Set expiration to 1 hour';
-is $config->validto, Mojo::Date->new(time+3600)->to_datetime, 'Expires in 1 hour';
+is $config->validto, Mojo::Date->new(time + 3600)->to_datetime,
+  'Expires in 1 hour';

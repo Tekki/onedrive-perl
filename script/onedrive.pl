@@ -18,30 +18,31 @@ getopt
   't|test'    => \my $test;
 
 die extract_usage if $help;
+die 'Destination missing!' unless @ARGV;
 
-my $conn = Tekki::Onedrive::Connector->new;
-$conn->verbose(1) if $verbose;
+for my $destination (@ARGV) {
 
-if (my $dest = shift) {
-  $conn->destination($dest);
+  my $conn = Tekki::Onedrive::Connector->new($destination);
+  $conn->debug(1)   if $debug;
+  $conn->verbose(1) if $verbose;
+
+  if ($logout) {
+    $conn->logout;
+  }
+
+  if ($auth) {
+    $conn->authenticate;
+  }
+
+  if ($test) {
+    $conn->test;
+  }
+
+  if ($sync) {
+    $conn->synchronize;
+  }
+
 }
-
-if ($logout) {
-  $conn->logout;
-}
-
-if ($auth) {
-  $conn->authenticate;
-}
-
-if ($sync) {
-  $conn->synchronize;
-}
-
-if ($test) {
-  $conn->test;
-}
-
 
 =encoding utf8
 
@@ -51,7 +52,7 @@ onedrive.pl - Perl client for OneDrive.
 
 =head1 SYNOPSIS
 
-  Usage: onedrive.pl [OPTIONS] [DESTINATION]
+  Usage: onedrive.pl OPTIONS DESTINATION
 
     onedrive.pl -a ./destination
     onedrive.pl -s ./destination
@@ -62,7 +63,7 @@ onedrive.pl - Perl client for OneDrive.
     -a, --auth         Authenticate
     -h, --help         Show this message
     -s, --sync         Synchronize
-    -v, --verbose      Print debug information
+    -v, --verbose      Print information about the progress
     -x, --logout       Logout
 
 =head1 DESCRIPTION

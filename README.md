@@ -7,13 +7,13 @@ A Perl client for OneDrive.
 ## Synopsis
 
     # authenticate
-    onedrive.pl -a [/path/to/destination]
+    onedrive.pl -a [-v] /path/to/destination
 
     # synchronize
-    onedrive.pl -s [-v] [/path/to/destination]
+    onedrive.pl -s [-v] /path/to/destination
 
     # logout
-    onedrive.pl -x [/path/to/destination]
+    onedrive.pl -x /path/to/destination
 
 ## Features
 
@@ -58,9 +58,13 @@ In the following, ***onedrive.pl*** refers to the full path to the onedrive scri
 
     ~/git/onedrive-perl/script/onedrive.pl
 
-***destination*** is the path where the content of your library will be copied to, for example
+***destination[s]*** is the path where the content of your library will be copied to, for example
 
-    ~/onedrive/personal
+    onedrive.pl OPTIONS ~/onedrive/personal
+
+You can call it on multiple destinations
+
+    onedrive.pl OPTIONS ~/onedrive/personal ~/onedrive/shared_a ~/onedrive/shared_b
 
 It has the following subdirectories:
 
@@ -72,15 +76,10 @@ It has the following subdirectories:
 
 If the destination doesn't exist, the complete directory tree is created automatically.
 
-The destination is optional and defaults to the actual directory. The following commands are equal
-
-    onedrive.pl [options]
-    onedrive.pl [options] ./
-
 ### Authenticate
 
-    onedrive.pl -a destination
-    onedrive.pl --authenticate destination
+    onedrive.pl -a destination[s]
+    onedrive.pl --authenticate destination[s]
 
 This will display a link like
 
@@ -101,19 +100,19 @@ If you want to keep the proposed values, simply press ENTER.
 
 ### Synchronize
 
-    onedrive.pl -s destination
-    onedrive.pl --synchronize destination
+    onedrive.pl -s destination[s]
+    onedrive.pl --synchronize destination[s]
 
 This will synchronize your OneDrive with the destination and (hopefully) exit without a message. If you want to see some information about what the program is doing, use one of
 
-    onedrive.pl -s -v destination
-    onedrive.pl --synchronize --verbose destination
+    onedrive.pl -s -v destination[s]
+    onedrive.pl --synchronize --verbose destination[s]
 
 ***Crashes:*** At this moment, the program will crash maybe once an hour, especially if errors and timeouts on the side of Microsoft occur. As it develops, these crashes will be less frequent. ***But*** even now you should be able to restart it without creating a single inconsistency.
 
 ### Logout
 
-    onedrive.pl -x destination
-    onedrive.pl --logout destination
+    onedrive.pl -x destination[s]
+    onedrive.pl --logout destination[s]
 
 This disconnects the destination from your OneDrive. To revoke all the rights you gave to this program, go to your [Microsoft Account](https://account.live.com/consent/Manage) and delete it from the list. Of course you can authenticate again any time.

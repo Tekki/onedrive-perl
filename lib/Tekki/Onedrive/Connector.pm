@@ -23,10 +23,18 @@ use Tekki::Onedrive::Item;
 
 use constant {WAIT_FOR_RETRY => 10, MAX_RETRIES => 5,};
 
+# constructor
+
+sub new ($class, $destination) {
+  my $self = bless {}, $class;
+  $self->destination($destination);
+
+  return $self;
+}
+
 # methods
 
-has destination => './';
-has 'verbose';
+has ['debug', 'destination', 'verbose'];
 
 sub authenticate ($self) {
 
@@ -157,6 +165,8 @@ sub synchronize ($self) {
   my $config = Tekki::Onedrive::Config->new($self->destination);
   die 'Not authenticated' unless $config->refresh_token;
 
+  say encode 'UTF-8', $config->description if $self->verbose;
+
   my $db = Tekki::Onedrive::Database->new($self->destination);
 
   chdir $self->destination . '/documents';
@@ -169,7 +179,7 @@ sub synchronize ($self) {
     while (my $task = $db->next_task) {
       my $item = Tekki::Onedrive::Item->new($task->{description});
 
-      say "$task->{id}: $item->{name}" if $self->verbose;
+      say encode 'UTF-8', "$task->{id}: $item->{name}" if $self->verbose;
 
       my $actions = $db->find_differences($item);
       unless (keys $actions->%*) {
@@ -214,7 +224,7 @@ sub synchronize ($self) {
 
           # move local file
           $move->{old_path}->move_to($move->{new_path});
-          say "  moved to $move->{new_path}" if $self->verbose;
+          say encode 'UTF-8', "  moved to $move->{new_path}" if $self->verbose;
 
           # change modification time
           $item->update_mtime;
@@ -304,13 +314,14 @@ sub _download_content ($self, $item, $path, $config) {
   my $tx = $ua->get($url, {Authorization => "Bearer $token"});
   die $self->_error($tx) if $tx->error;
 
+# size is unreliable!
 #  my $asset_size = $tx->success->content->asset->size;
 #  die "Size of $item->{name} is $asset_size instead of $item->{size}!"
 #    if $asset_size != $item->size;
 
   $tx->success->content->asset->move_to($path);
 
-  die "Download of $item->{name} failed!" unless $item->exists_identical;
+  die encode 'UTF-8', "Download of $item->{name} failed!" unless $item->exists_identical;
 
   say '  content downloaded' if $self->verbose;
 }
