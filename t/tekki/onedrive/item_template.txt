@@ -1,0 +1,30 @@
+# linebreaks and spaces added to JSON for better readability
+(
+  item => {
+    json => decode_json(
+      q||
+    ),
+    content => {
+      id      => '',
+      ctag    => '',
+      deleted => 0,
+      etag    => '',
+      exists  => 0,
+      exists_identical => 0,
+      file             => 0,
+      folder           => 0,
+      full_path        => '',
+      lastmodified     => '',
+      modifiedby       => '',
+      name             => '',
+      mtime            => '',
+      package          => 0,
+      parent_id        => '',
+      parent_path      => '',
+      remote           => 0,
+      root             => 0,
+      sha1             => '',
+      size             => ,
+    },
+  },
+)

@@ -19,7 +19,7 @@ sub new ($class, $destination) {
   $self->configfile($configfile);
 
   if (-f $configfile) {
-    $self->content(Config::Tiny->read($configfile));
+    $self->content(Config::Tiny->read($configfile, 'utf8'));
   } else {
     $self->content(Config::Tiny->read_string(q|description=|));
   }
@@ -37,8 +37,19 @@ sub delta_link ($self, $newvalue = undef) {
     $self->value('delta_link', $newvalue)->save;
     return $self;
   } else {
-    return $self->value('delta_link')
-      || $self->value('drive_url') . '/root/delta';
+    my $rv;
+    if ($self->value('delta_link')) {
+      $rv = $self->value('delta_link');
+    } elsif ($self->value('remote')) {
+      $rv
+        = $self->value('drive_url')
+        . '/items/'
+        . $self->value('item_id')
+        . '/delta';
+    } else {
+      $rv = $self->value('drive_url') . '/root/delta';
+    }
+    return $rv;
   }
 }
 
@@ -62,7 +73,7 @@ sub next_link ($self, $newvalue = undef) {
 }
 
 sub save ($self) {
-  $self->content->write($self->configfile);
+  $self->content->write($self->configfile, 'utf8');
   return $self;
 }
 

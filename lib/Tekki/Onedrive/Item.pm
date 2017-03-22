@@ -6,6 +6,7 @@ no warnings 'experimental::signatures';
 use Digest::SHA 'sha1_hex';
 use Mojo::Date;
 use Mojo::File;
+use Mojo::Util 'url_unescape';
 
 # constructor
 
@@ -81,13 +82,13 @@ sub update ($self, $content) {
   }
 
   # parent
-  if ($content->{root}) {
-    $self->root(1);
-  } else {
-    $self->parent_id($content->{parentReference}->{id});
-    my $parent_path = $content->{parentReference}->{path} || '';
+  if (my $parent = $content->{parentReference} and !$content->{root}) {
+    $self->parent_id($parent->{id});
+    my $parent_path = url_unescape $parent->{path} || '';
     $parent_path =~ s|.*?:/?||;
     $self->parent_path($parent_path);
+  } else {
+    $self->root(1);
   }
 
   return $self;

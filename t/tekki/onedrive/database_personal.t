@@ -44,14 +44,14 @@ can_ok $package, $_
 # test db
 
 ok my $tempdir = Mojo::File::tempdir, 'Create temp folder';
-ok my $db = $package->new($tempdir);
+ok my $db = $package->new($tempdir), 'Create db object';
 
 # add tasks
 
 my @tasks = map { $testitem{$_}{json} }
-  qw|folder1 folder2 file1_deleted file1 folder2 package1
+  qw|root folder1 folder2 file1_deleted file1 folder2 package1
   file1_updated file1_renamed file1_moved folder1_renamed
-  file1_moved_again file1_deleted|;
+  file1_moved_again file1_deleted remote_folder|;
 my $counter = @tasks;
 
 is $db->add_tasks(\@tasks), $counter, "$counter tasks added";
@@ -63,24 +63,36 @@ my $log_entry = sub ($item, $action) {
     name         => $item->name,
     lastmodified => $item->lastmodified,
     modifiedby   => $item->modifiedby,
-    action       => 'create',
+    action       => $action,
   };
 };
 
-# create first folder
+# root
 
 ok my $task = $db->next_task, 'Get first task';
 ok my $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
 
-my %expected = $testitem{folder1}{content}->%*;
-
-subtest 'Content of item' => sub {
-  is $item->$_, $expected{$_}, "$_ is $expected{$_}" for sort keys %expected;
-};
-
 ok my $actions = $db->find_differences($item), 'Find differences';
 
-%expected
+my %expected
+  = (
+  create => {name => 'root', parent_path => '', full_path => 'root',}
+  );
+
+is_deeply $actions, \%expected, 'Action description';
+
+is $db->create_item($item), $db, 'Add item to db';
+is $db->task_succeeded($task, $item, 'create'), $db, 'Log entry';
+push $log_entries{success}->@*, $log_entry->($item, 'create');
+
+# create first folder
+
+ok $task = $db->next_task, 'Get next task';
+ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+
+ok $actions = $db->find_differences($item), 'Find differences';
+
+ok %expected
   = (
   create => {name => 'Dokumente', parent_path => '', full_path => 'Dokumente',}
   );
@@ -101,12 +113,6 @@ subtest 'Content of item in db' => sub {
 
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
-
-%expected = $testitem{folder2}{content}->%*;
-
-subtest 'Content of item' => sub {
-  is $item->$_, $expected{$_}, "$_ is $expected{$_}" for sort keys %expected;
-};
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -135,12 +141,6 @@ subtest 'Content of item in db' => sub {
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
 
-%expected = $testitem{file1_deleted}{content}->%*;
-
-subtest 'Content of item' => sub {
-  is $item->$_, $expected{$_}, "$_ is $expected{$_}" for sort keys %expected;
-};
-
 ok $actions = $db->find_differences($item), 'Find differences';
 is_deeply $actions, {}, 'No action';
 
@@ -151,12 +151,6 @@ is $db->task_ignored($task, $item), $db, 'Log entry';
 ok $task = $db->next_task, 'Get next task';
 my $task_id = $task->{id};
 ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
-
-%expected = $testitem{file1}{content}->%*;
-
-subtest 'Content of item' => sub {
-  is $item->$_, $expected{$_}, "$_ is $expected{$_}" for sort keys %expected;
-};
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -193,12 +187,6 @@ subtest 'Content of item in db' => sub {
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
 
-%expected = $testitem{folder2}{content}->%*;
-
-subtest 'Content of item' => sub {
-  is $item->$_, $expected{$_}, "$_ is $expected{$_}" for sort keys %expected;
-};
-
 ok $actions = $db->find_differences($item), 'Find differences';
 is_deeply $actions, {}, 'No action';
 
@@ -208,12 +196,6 @@ is $db->task_ignored($task, $item), $db, 'Log entry';
 
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
-
-%expected = $testitem{package1}{content}->%*;
-
-subtest 'Content of item' => sub {
-  is $item->$_, $expected{$_}, "$_ is $expected{$_}" for sort keys %expected;
-};
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -236,12 +218,6 @@ push $log_entries{success}->@*, $log_entry->($item, 'create');
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
 
-%expected = $testitem{file1_updated}{content}->%*;
-
-subtest 'Content of item' => sub {
-  is $item->$_, $expected{$_}, "$_ is $expected{$_}" for sort keys %expected;
-};
-
 ok $actions = $db->find_differences($item), 'Find differences';
 
 %expected = (update => {full_path => 'Dokumente/Vorlagen/Testdocument.txt',});
@@ -256,12 +232,6 @@ push $log_entries{success}->@*, $log_entry->($item, 'update');
 
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
-
-%expected = $testitem{file1_renamed}{content}->%*;
-
-subtest 'Content of item' => sub {
-  is $item->$_, $expected{$_}, "$_ is $expected{$_}" for sort keys %expected;
-};
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -285,12 +255,6 @@ push $log_entries{success}->@*, $log_entry->($item, 'update');
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
 
-%expected = $testitem{file1_moved}{content}->%*;
-
-subtest 'Content of item' => sub {
-  is $item->$_, $expected{$_}, "$_ is $expected{$_}" for sort keys %expected;
-};
-
 ok $actions = $db->find_differences($item), 'Find differences';
 
 %expected = (
@@ -313,14 +277,8 @@ push $log_entries{success}->@*, $log_entry->($item, 'move');
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
 
-%expected = $testitem{folder1_renamed}{content}->%*;
-
-subtest 'Content of item' => sub {
-  is $item->$_, $expected{$_}, "$_ is $expected{$_}" for sort keys %expected;
-};
-
 ok $actions = $db->find_differences($item), 'Find differences';
-use Data::Dump 'dd'; dd $actions; #exit;
+
 %expected = (
   move => {
     new_name        => 'Documents',
@@ -340,12 +298,6 @@ push $log_entries{success}->@*, $log_entry->($item, 'move');
 
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
-
-%expected = $testitem{file1_moved_again}{content}->%*;
-
-subtest 'Content of item' => sub {
-  is $item->$_, $expected{$_}, "$_ is $expected{$_}" for sort keys %expected;
-};
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -369,12 +321,6 @@ push $log_entries{success}->@*, $log_entry->($item, 'move');
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
 
-%expected = $testitem{file1_deleted}{content}->%*;
-
-subtest 'Content of item' => sub {
-  is $item->$_, $expected{$_}, "$_ is $expected{$_}" for sort keys %expected;
-};
-
 ok $actions = $db->find_differences($item), 'Find differences';
 
 %expected = (delete => {full_path => 'Documents/Vorlagen/Testdocument Renamed.txt',});
@@ -385,6 +331,17 @@ is $db->delete_item($item), $db, 'Delete item in db';
 ok !$db->find_item($item), 'Item is no longer in db';
 is $db->task_succeeded($task, $item, 'delete'), $db, 'Log entry';
 push $log_entries{success}->@*, $log_entry->($item, 'delete');
+
+# remote folder
+
+ok $task = $db->next_task, 'Get next task';
+ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+
+ok $actions = $db->find_differences($item), 'Find differences';
+
+is_deeply $actions, {}, 'No action';
+
+is $db->task_ignored($task, $item), $db, 'Log entry';
 
 # no more tasks
 

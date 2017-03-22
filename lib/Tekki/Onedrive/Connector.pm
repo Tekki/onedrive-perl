@@ -4,7 +4,7 @@ use Mojo::Base -base;
 use feature 'signatures';
 no warnings 'experimental::signatures';
 
-our $VERSION = 0.50;
+our $VERSION = 0.60;
 
 use Data::Dump 'pp';
 use Digest::SHA 'sha1_hex';
@@ -12,6 +12,7 @@ use Config::Tiny;
 use Mojo::File 'path';
 use Mojo::URL;
 use Mojo::UserAgent;
+use Mojo::Util qw|decode encode|;
 
 use Tekki::Onedrive::Config;
 use Tekki::Onedrive::Database;
@@ -75,35 +76,71 @@ sub authenticate ($self) {
 
   unless ($config->value('drive_id')) {
 
-    # get list of available drives
-    my $ua  = Mojo::UserAgent->new;
-    my $url = $globals->value('drive_url') . '/me/drives';
-    my $tx
-      = $ua->get($url, {Authorization => "Bearer $response->{access_token}"});
+    # list of available drives
+    my @drives;
+    my $ua = Mojo::UserAgent->new;
+
+    # my own
+    my $tx = $ua->get(
+      $globals->value('drive_url') . '/me/drive',
+      {Authorization => "Bearer $response->{access_token}"}
+    );
+    die $self->_error($tx) if $tx->error;
+    my $own        = $tx->success->json;
+    my $drive_type = $own->{driveType};
+    $own->{description}
+      = "$own->{owner}->{user}->{displayName} / OneDrive " . ucfirst $drive_type;
+    push @drives, $own;
+
+    # shared with me
+    $tx = $ua->get(
+      $globals->value('drive_url') . '/me/drive/sharedWithMe',
+      {Authorization => "Bearer $response->{access_token}"}
+    );
     die $self->_error($tx) if $tx->error;
 
+    for my $shared ($tx->success->json->{value}->@*) {
+      next if $shared->{remoteItem}->{file};
+
+      $shared->{description}
+        = "$shared->{remoteItem}->{createdBy}->{user}->{displayName} / $shared->{name}";
+      push @drives, $shared;
+    }
+
     # select drive
-    my @drives = $tx->success->json->{value}->@*;
     my $i;
-    say sprintf("%3d: %s",
-      ++$i, "$_->{driveType} / $_->{owner}->{user}->{displayName}")
-      for @drives;
+    say encode 'UTF-8', sprintf("%3d: %s", ++$i, $_->{description}) for @drives;
     print 'Select drive [1]: ';
     chomp($in = <STDIN>);
     $in ||= 1;
     my $drive = $drives[$in - 1];
 
     # set config data
-    $config->value('drive_id',   $drive->{id});
-    $config->value('drive_url',  $globals->value('drive_url') . '/me/drive');
-    $config->value('drive_type', $drive->{driveType});
-    $config->value('owner',      $drive->{owner}->{user}->{displayName});
+    print encode 'UTF-8', "Description [$drive->{description}]: ";
+    chomp($in = decode 'UTF-8', <STDIN>);
+    $config->value('description', $in || $drive->{description});
+    $config->value('drive_type', $drive_type);
+    if (my $remote = $drive->{remoteItem}) {
 
-    my $description = "$drive->{owner}->{user}->{displayName}'s OneDrive";
-    $description .= ' for Business' if $drive->{driveType} eq 'business';
-    print "Description [$description]: ";
-    chomp($in = <STDIN>);
-    $config->value('description', $in || $description);
+      # shared folder
+      $config->value('item_id',  $remote->{id});
+      $config->value('drive_id', $remote->{parentReference}->{driveId});
+      $config->value(
+        'drive_url', $globals->value('drive_url') .
+          "/drives/$remote->{parentReference}->{driveId}"
+      );
+      $config->value('owner',  $remote->{createdBy}->{user}->{displayName});
+      $config->value('remote', 1);
+
+    } else {
+
+      # my own drive
+      $config->value('drive_id',  $drive->{id});
+      $config->value('drive_url', $globals->value('drive_url') . '/me/drive');
+      $config->value('owner',     $drive->{owner}->{user}->{displayName});
+
+    }
+
   }
   $config->save;
   say 'Config written.' if $self->verbose;
@@ -276,8 +313,7 @@ sub _download_content ($self, $item, $path, $config) {
 
   $tx->success->content->asset->move_to($path);
 
-  die "Download of $item->{name} failed!"
-    unless $item->exists_identical;
+  die "Download of $item->{name} failed!" unless $item->exists_identical;
 
   say '  content downloaded' if $self->verbose;
 }

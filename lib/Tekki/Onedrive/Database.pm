@@ -74,7 +74,8 @@ sub find_differences ($self, $item) {
     if ($item->deleted) {
       $actions{delete} = {full_path => $item->full_path};
 
-    } elsif ($db_item->{full_path} ne $item->full_path) {
+    } elsif ($db_item->{full_path} ne $item->full_path)
+    {
 
       # path and name
       $actions{move} = {
@@ -93,7 +94,7 @@ sub find_differences ($self, $item) {
         $actions{update} = {full_path => $item->full_path};
       }
     }
-  } elsif (!$item->deleted) {
+  } elsif (!$item->deleted && !$item->remote) {
 
     # new item
     $actions{create} = {
@@ -111,16 +112,15 @@ sub find_item ($self, $item) {
 
   my @path;
   my $parent = {name => $rv->{name}, parent_id => $rv->{parent_id}};
-  while (1) {
+  while ($parent->{parent_id}) {
     unshift @path, $parent->{name};
     $parent = $db->select(
       'item',
       ['name', 'parent_id'],
       {item_id => $parent->{parent_id}}
     )->hash;
-    last unless $parent->{parent_id};
   }
-  $rv->{full_path} = path(@path);
+  $rv->{full_path} = @path ? path(@path) : '';
 
   return $rv;
 }

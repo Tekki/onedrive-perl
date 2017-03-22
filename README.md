@@ -20,7 +20,7 @@ A Perl client for OneDrive.
 OneDrive-Perl is a backup client for OneDrive, i.e. a program that mirrors all the changes on your cloud drive to a local machine, using the [Graph API](https://developer.microsoft.com/en-us/graph/) and obviously written in [Perl](https://www.perl.org). It is allowed to crash, but not to lose a single operation. It doesn't perform a two-way synchronization (and probably will never do).
 
 The next steps are:
-  * support for remote items (files and folders shared with me)
+  * ~~support for remote items (files and folders shared with me)~~
   * support for OneDrive for Business
   * support for SharePoint
   * possibility to upload a big amount of data to OneDrive and SharePoint
@@ -91,11 +91,12 @@ that you have to open in your browser. Log in with your Microsoft account and al
 
     Paste the response URL:
 
-and press ENTER. Now you can choose which drive you want to synchronize and give it a description.
+and press ENTER. If the authentication is successful, you can choose which drive you want to synchronize and give it a description.
 
-    1: personal / Tekki
+    1: Tekki / OneDrive Personal
+    2: Bonnie Parker / Shared with Tekki
     Select drive [1]:
-    Description [Tekki's OneDrive]:
+    Description [Tekki / OneDrive Personal]:
 
 If you want to keep the proposed values, simply press ENTER.
 
