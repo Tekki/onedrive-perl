@@ -66,10 +66,10 @@ sub authenticate ($self) {
   # redeem code for access tokens
   my $ua   = Mojo::UserAgent->new;
   my %form = (
-    client_id     => $globals->value('client_id'),
-    redirect_uri  => $globals->value('redirect_uri'),
-    code          => $code,
-    grant_type    => 'authorization_code',
+    client_id    => $globals->value('client_id'),
+    redirect_uri => $globals->value('redirect_uri'),
+    code         => $code,
+    grant_type   => 'authorization_code',
   );
   my $tx = $ua->post($globals->value('token_url'), form => \%form);
   die $self->_error($tx) if $tx->error;
@@ -276,6 +276,15 @@ sub synchronize ($self) {
 
       my $response = $tx->success->json;
 
+      # debug
+      if ($self->debug) {
+        my $path     = path("$ENV{HOME}/temp")->make_path;
+        my $filename = $config->description . '_delta_';
+        my $i        = 1;
+        $i++ while -f $path->child("$filename$i.txt");
+        $path->child("$filename$i.txt")->spurt($tx->success->body);
+      }
+
       # add to db
       my $counter = $db->add_tasks($response->{value});
       say "\n$counter new tasks downloaded\n" if $self->verbose;
@@ -296,7 +305,28 @@ sub test ($self) {
   my $config = Tekki::Onedrive::Config->new($self->destination);
   my $token  = $self->_get_token($config);
 
-  # use this for tests and experiments
+  while (1) {
+    print 'URL: ';
+    chomp(my $url = <STDIN>);
+    last unless $url;
+
+    $url =~ s/<%(.*?)%>/$config->$1/ge;
+    my $ua = Mojo::UserAgent->new;
+    my $tx = $ua->get($url, {Authorization => "Bearer $token"});
+    if ($tx->error) {
+      warn $self->_error($tx);
+      next;
+    }
+    say pp $tx->success->json;
+
+    if ($self->debug) {
+      my $path     = path("$ENV{HOME}/temp")->make_path;
+      my $filename = $config->description . '_test_';
+      my $i        = 1;
+      $i++ while -f $path->child("$filename$i.txt");
+      $path->child("$filename$i.txt")->spurt($tx->success->body);
+    }
+  }
 }
 
 # internal methods
@@ -307,11 +337,20 @@ sub _download_content ($self, $item, $path, $config) {
     return;
   }
 
-  my $ua    = Mojo::UserAgent->new->max_redirects(2);
+  # update metadata
+  my $ua    = Mojo::UserAgent->new;
   my $token = $self->_get_token($config);
 
-  my $url = $config->drive_url . "/items/$item->{id}/content";
+  my $url = $config->drive_url . "/items/$item->{id}";
   my $tx = $ua->get($url, {Authorization => "Bearer $token"});
+  die $self->_error($tx) if $tx->error;
+
+  my $json = $tx->success->json;
+  $item->update($json);
+
+  # download
+  $url = $json->{'@microsoft.graph.downloadUrl'};
+  $tx = $ua->get($url, {Authorization => "Bearer $token"});
   die $self->_error($tx) if $tx->error;
 
 # size is unreliable!
@@ -321,7 +360,8 @@ sub _download_content ($self, $item, $path, $config) {
 
   $tx->success->content->asset->move_to($path);
 
-  die encode 'UTF-8', "Download of $item->{name} failed!" unless $item->exists_identical;
+  die encode 'UTF-8', "Download of $item->{name} failed!"
+    unless $item->exists_identical;
 
   say '  content downloaded' if $self->verbose;
 }
@@ -359,8 +399,7 @@ sub _get_token ($self, $config) {
     my $tx = $ua->post($url, form => \%form);
     die $self->_error($tx) if $tx->error;
     my $response = $tx->success->json;
-    $config->$_($response->{$_})
-      for qw|scope access_token refresh_token|;
+    $config->$_($response->{$_}) for qw|scope access_token refresh_token|;
 
     $config->expires_in($response->{expires_in})->save;
   }

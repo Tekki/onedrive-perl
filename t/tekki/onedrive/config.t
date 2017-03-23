@@ -1,7 +1,7 @@
 use Mojo::Base -strict;
 
 use Test::More tests => 40;
-binmode STDOUT, ':utf8';
+use open qw|:std :utf8|;
 
 use Mojo::Date;
 use Mojo::File;

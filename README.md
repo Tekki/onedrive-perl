@@ -3,6 +3,7 @@
 A Perl client for OneDrive.
 
 **Warning: As long as you see this message, the code in this repo is still experimental. Don't be surprised if you download incompatible changes with git pull.**
+(If you run into incompatibilities, reset your connection. Delete all files in `destination/config`, reathenticate and synchronize again.)
 
 ## Synopsis
 
@@ -17,7 +18,7 @@ A Perl client for OneDrive.
 
 ## Features
 
-OneDrive-Perl is a backup client for OneDrive, i.e. a program that mirrors all the changes on your cloud drive to a local machine, using the [Graph API](https://developer.microsoft.com/en-us/graph/) and obviously written in [Perl](https://www.perl.org). It is allowed to crash, but not to lose a single operation. It doesn't perform a two-way synchronization (and probably will never do).
+OneDrive-Perl is a backup client for OneDrive, i.e. a program that mirrors all the changes on your own or on shared drives to a local machine, using the [Graph API](https://developer.microsoft.com/en-us/graph/) and obviously written in [Perl](https://www.perl.org). It is allowed to crash, but not to lose a single operation. It doesn't perform a two-way synchronization (and probably will never do).
 
 The next steps are:
   * ~~support for remote items (files and folders shared with me)~~
@@ -54,11 +55,11 @@ Update the code with
 
 ### Paths
 
-In the following, ***onedrive.pl*** refers to the full path to the onedrive script, for example
+In the following, `onedrive.pl` refers to the full path to the onedrive script, for example
 
     ~/git/onedrive-perl/script/onedrive.pl
 
-***destination[s]*** is the path where the content of your library will be copied to, for example
+`destination[s]` is the path where the content of your library will be copied to, for example
 
     onedrive.pl OPTIONS ~/onedrive/personal
 
@@ -72,7 +73,7 @@ It has the following subdirectories:
     |-- config
     |-- documents
 
-***config*** is used to store internal data, ***documents*** is the place where the files from OneDrive will be found.
+`config` is used to store internal data, `documents` is the place where the files from OneDrive will be found.
 
 If the destination doesn't exist, the complete directory tree is created automatically.
 

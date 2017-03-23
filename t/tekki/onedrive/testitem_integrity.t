@@ -1,6 +1,7 @@
 use Mojo::Base -strict;
 
 use Test::More tests => 2;
+use open qw|:std :utf8|;
 
 use Mojo::File;
 use Mojo::JSON 'decode_json';

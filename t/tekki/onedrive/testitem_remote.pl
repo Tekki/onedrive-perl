@@ -329,4 +329,177 @@
       size             => 41,
     },
   },
+  folder3 => {
+    json => decode_json(
+      q|{
+  "@odata.type" : "#microsoft.graph.driveItem",
+  "createdBy" : {
+    "application" : {
+      "id" : "480728c5"
+    },
+    "device" : {
+      "id" : "18000181dd0d9e"
+    },
+    "user" : {
+      "displayName" : "Rolf St\u00f6ckli",
+      "id" : "7a47b77d5182c99c"
+    },
+    "oneDriveSync" : {
+      "@odata.type" : "#microsoft.graph.identity",
+      "id" : "835efe71-0c45-4a50-b7a1-bfa5242e80dc"
+    }
+  },
+  "createdDateTime" : "2017-03-23T08:53:05.067Z",
+  "cTag" : "adDo3QTQ3Qjc3RDUxODJDOTlDITE2NTY1My42MzYyNTg1NjI1OTkyNzAwMDA",
+  "eTag" : "aN0E0N0I3N0Q1MTgyQzk5QyExNjU2NTMuMQ",
+  "id" : "7A47B77D5182C99C!165653",
+  "lastModifiedBy" : {
+    "application" : {
+      "id" : "480728c5"
+    },
+    "device" : {
+      "id" : "18000181dd0d9e"
+    },
+    "user" : {
+      "displayName" : "Rolf St\u00f6ckli",
+      "id" : "7a47b77d5182c99c"
+    },
+    "oneDriveSync" : {
+      "@odata.type" : "#microsoft.graph.identity",
+      "id" : "835efe71-0c45-4a50-b7a1-bfa5242e80dc"
+    }
+  },
+  "lastModifiedDateTime" : "2017-03-23T08:57:39.927Z",
+  "name" : "\u0420\u043e\u0441\u0441\u0438\u0439\u0441\u043a\u0430\u044f \u0433\u043e\u0441\u0443\u0434\u0430\u0440\u0441\u0442\u0432\u0435\u043d\u043d\u0430\u044f \u0431\u0438\u0431\u043b\u0438\u043e\u0442\u0435\u043a\u0430",
+  "parentReference" : {
+    "driveId" : "7a47b77d5182c99c",
+    "id" : "7A47B77D5182C99C!165595",
+    "name" : "Shared with Cubulon",
+    "path" : "/drives/7a47b77d5182c99c/items/7A47B77D5182C99C!165595:"
+  },
+  "size" : 540,
+  "webUrl" : "https://1drv.ms/f/s!AJzJglF9t0d6io4V",
+  "fileSystemInfo" : {
+    "createdDateTime" : "2017-03-23T08:52:56Z",
+    "lastModifiedDateTime" : "2017-03-23T08:53:08Z"
+  },
+  "folder" : {
+    "childCount" : 0
+  }
+}|
+    ),
+    content => {
+      id      => '7A47B77D5182C99C!165653',
+      ctag    => 'adDo3QTQ3Qjc3RDUxODJDOTlDITE2NTY1My42MzYyNTg1NjI1OTkyNzAwMDA',
+      deleted => 0,
+      etag    => 'aN0E0N0I3N0Q1MTgyQzk5QyExNjU2NTMuMQ',
+      exists  => 0,
+      exists_identical => 0,
+      file             => 0,
+      folder           => 1,
+      full_path =>
+        'Российская государственная библиотека',
+      lastmodified => '2017-03-23T08:57:39.927Z',
+      modifiedby   => 'Rolf Stöckli',
+      name =>
+        'Российская государственная библиотека',
+      mtime       => '',
+      package     => 0,
+      parent_id   => '7A47B77D5182C99C!165595',
+      parent_path => '',
+      remote      => 0,
+      root        => 0,
+      sha1        => '',
+      size        => 540,
+    },
+  },
+
+  file3 => {
+    json => decode_json(
+      q|{
+  "@odata.type" : "#microsoft.graph.driveItem",
+  "@microsoft.graph.downloadUrl" : "https://1g9z7g-dm2306.files.1drv.com/y3pivLwuDL80ZYTmM3FBtlH0iNqSCd3r2dRlU-nEhnJOJ9mGENwVxqtGu5pXdn1KN7U7tNqbs3gO_z8Bzn42u-dieZ80U1szZgfI4EP1gGxUu_VnU4dU_6tY4dCyqjAQ97CfaZX7s1cuzTpdKDuons0z1rS4HDhsjl1sQjidTFUqQKr_eog1Oq6m0L8uoRATmZJ",
+  "createdBy" : {
+    "application" : {
+      "id" : "480728c5"
+    },
+    "device" : {
+      "id" : "18000181dd0d9e"
+    },
+    "user" : {
+      "displayName" : "Rolf St\u00f6ckli",
+      "id" : "7a47b77d5182c99c"
+    },
+    "oneDriveSync" : {
+      "@odata.type" : "#microsoft.graph.identity",
+      "id" : "835efe71-0c45-4a50-b7a1-bfa5242e80dc"
+    }
+  },
+  "createdDateTime" : "2017-03-23T08:53:14.86Z",
+  "cTag" : "aYzo3QTQ3Qjc3RDUxODJDOTlDITE2NTY1NC4yNTg",
+  "eTag" : "aN0E0N0I3N0Q1MTgyQzk5QyExNjU2NTQuMw",
+  "id" : "7A47B77D5182C99C!165654",
+  "lastModifiedBy" : {
+    "application" : {
+      "id" : "480728c5"
+    },
+    "device" : {
+      "id" : "18000181dd0d9e"
+    },
+    "user" : {
+      "displayName" : "Rolf St\u00f6ckli",
+      "id" : "7a47b77d5182c99c"
+    },
+    "oneDriveSync" : {
+      "@odata.type" : "#microsoft.graph.identity",
+      "id" : "835efe71-0c45-4a50-b7a1-bfa5242e80dc"
+    }
+  },
+  "lastModifiedDateTime" : "2017-03-23T08:57:39.927Z",
+  "name" : "\u041d\u043e\u0432\u043e\u0441\u0442\u0438.txt",
+  "parentReference" : {
+    "driveId" : "7a47b77d5182c99c",
+    "id" : "7A47B77D5182C99C!165653",
+    "name" : "\u0420\u043e\u0441\u0441\u0438\u0439\u0441\u043a\u0430\u044f \u0433\u043e\u0441\u0443\u0434\u0430\u0440\u0441\u0442\u0432\u0435\u043d\u043d\u0430\u044f \u0431\u0438\u0431\u043b\u0438\u043e\u0442\u0435\u043a\u0430",
+    "path" : "/drives/7a47b77d5182c99c/items/7A47B77D5182C99C!165595:/%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D0%B9%D1%81%D0%BA%D0%B0%D1%8F%20%D0%B3%D0%BE%D1%81%D1%83%D0%B4%D0%B0%D1%80%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F%20%D0%B1%D0%B8%D0%B1%D0%BB%D0%B8%D0%BE%D1%82%D0%B5%D0%BA%D0%B0"
+  },
+  "size" : 540,
+  "webUrl" : "https://1drv.ms/t/s!AJzJglF9t0d6io4W",
+  "file" : {
+    "hashes" : {
+      "sha1Hash" : "F6E9EEB9AF690BA110AFF1093A8F4055D6E8F460"
+    },
+    "mimeType" : "text/plain"
+  },
+  "fileSystemInfo" : {
+    "createdDateTime" : "2017-03-23T08:53:08Z",
+    "lastModifiedDateTime" : "2017-03-23T08:57:40Z"
+  }
+}|
+    ),
+    content => {
+      id               => '7A47B77D5182C99C!165654',
+      ctag             => 'aYzo3QTQ3Qjc3RDUxODJDOTlDITE2NTY1NC4yNTg',
+      deleted          => 0,
+      etag             => 'aN0E0N0I3N0Q1MTgyQzk5QyExNjU2NTQuMw',
+      exists           => 0,
+      exists_identical => 0,
+      file             => 1,
+      folder           => 0,
+      full_path =>
+        'Российская государственная библиотека/Новости.txt',
+      lastmodified => '2017-03-23T08:57:39.927Z',
+      modifiedby   => 'Rolf Stöckli',
+      name         => 'Новости.txt',
+      mtime        => '',
+      package      => 0,
+      parent_id    => '7A47B77D5182C99C!165653',
+      parent_path =>
+        'Российская государственная библиотека',
+      remote => 0,
+      root   => 0,
+      sha1   => 'f6e9eeb9af690ba110aff1093a8f4055d6e8f460',
+      size   => 540,
+    },
+  },
 );
