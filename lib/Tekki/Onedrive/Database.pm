@@ -13,7 +13,7 @@ use Mojo::SQLite;
 use constant {
   ITEM_FIELDS => [
     qw|ctag etag file folder lastmodified modifiedby name|,
-    qw|package parent_id remote sha1|,
+    qw|package parent_id quickxor remote sha1|,
   ],
 };
 
@@ -61,7 +61,7 @@ sub create_item ($self, $item) {
 
 sub delete_item ($self, $item) {
   my $db = $self->handle;
-  $db->delete('item', {item_id => $item->{id}});
+  $self->_delete_recursive($db, $item->{id});
   return $self;
 }
 
@@ -72,10 +72,11 @@ sub find_differences ($self, $item) {
 
     # existing item
     if ($item->deleted) {
-      $actions{delete} = {full_path => $item->full_path};
 
-    } elsif ($db_item->{full_path} ne $item->full_path)
-    {
+      $actions{delete} = {full_path => $db_item->{full_path}};
+      $item->name($db_item->{name}) unless $item->name;
+
+    } elsif ($db_item->{full_path} ne $item->full_path) {
 
       # path and name
       $actions{move} = {
@@ -83,7 +84,7 @@ sub find_differences ($self, $item) {
         new_parent_path => $item->parent_path,
         new_path        => $item->full_path,
         old_path        => $db_item->{full_path},
-        }
+      };
 
     } elsif ($db_item->{ctag} ne $item->ctag) {
 
@@ -108,7 +109,7 @@ sub find_differences ($self, $item) {
 
 sub find_item ($self, $item) {
   my $db = $self->handle;
-  my $rv = $db->select('item', '*', {item_id => $item->{id}})->hash or return;
+  my $rv = $db->select('item', undef, {item_id => $item->{id}})->hash or return;
 
   my @path;
   my $parent = {name => $rv->{name}, parent_id => $rv->{parent_id}};
@@ -145,7 +146,7 @@ sub log ($self, $since) {
 
   for my $result (qw|success error ignored|) {
     push $rv->{$result}->@*,
-      $db->select('log', '*', {result => $result, @since})->hashes->each;
+      $db->select('log', undef, {result => $result, @since})->hashes->each;
   }
 
   for my $result (qw|success error ignored|) {
@@ -220,12 +221,21 @@ sub update_item ($self, $item) {
 
   my $db = $self->handle;
 
-
   my %params = ();
   $params{$_} = $item->$_ for $self->ITEM_FIELDS->@*;
   $db->update('item', \%params, {item_id => $item->{id}});
 
   return $self;
+}
+
+# internal methods
+
+sub _delete_recursive ($self, $db, $item_id) {
+  unless ($db->select('item', 'file', {item_id => $item_id})->hash->{file}) {
+    $db->select('item', 'item_id', {parent_id => $item_id})
+      ->hashes->each(sub { $self->_delete_recursive($db, $_->{item_id}) });
+  }
+  $db->delete('item', {item_id => $item_id});
 }
 
 1;

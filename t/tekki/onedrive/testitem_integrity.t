@@ -1,13 +1,13 @@
 use Mojo::Base -strict;
 
-use Test::More tests => 2;
+use Test::More tests => 3;
 use open qw|:std :utf8|;
 
 use Mojo::File;
 use Mojo::JSON 'decode_json';
 use Tekki::Onedrive::Item;
 
-for my $context (qw|personal remote|) {
+for my $context (qw|business personal remote|) {
   subtest "Test items $context" => sub {
 
     # test values

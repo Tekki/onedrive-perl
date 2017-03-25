@@ -4,8 +4,6 @@ use Mojo::Base -base;
 use feature 'signatures';
 no warnings 'experimental::signatures';
 
-use Config::Tiny;
-
 # constants
 
 use constant {
@@ -24,13 +22,6 @@ sub new ($class) {
 
   my $content;
 
-#  for my $source ("$ENV{HOME}/.onedrivepl/globals.conf", '/etc/onedrivepl.conf')
-#  {
-#    if (-f $source) {
-#      $content = Config::Tiny->read($source);
-#      last;
-#    }
-#  }
   $content ||= {
     'Microsoft Graph' => {
       auth_url     => AUTH_URL,

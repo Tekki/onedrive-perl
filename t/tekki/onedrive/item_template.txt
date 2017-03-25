@@ -21,6 +21,7 @@
       package          => 0,
       parent_id        => '',
       parent_path      => '',
+      quickxor         => '',
       remote           => 0,
       root             => 0,
       sha1             => '',

@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS item (
   etag TEXT NOT NULL,
   ctag TEXT,
   sha1 TEXT,
+  quickxor TEXT,
   lastmodified TEXT NOT NULL,
   modifiedby TEXT NOT NULL,
   folder INTEGER,

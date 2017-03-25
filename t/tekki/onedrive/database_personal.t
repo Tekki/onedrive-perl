@@ -2,11 +2,13 @@ use Mojo::Base -strict;
 use feature 'signatures';
 no warnings 'experimental::signatures';
 
-use Test::More tests => 122;
+use Test::More tests => 108;
 
 use Mojo::File;
 use Mojo::JSON 'decode_json';
 
+
+use Tekki::Onedrive::Database;
 use Tekki::Onedrive::Item;
 
 # test values
@@ -14,37 +16,10 @@ use Tekki::Onedrive::Item;
 my %testitem
   = eval Mojo::File::path(__FILE__)->sibling('testitem_personal.pl')->slurp;
 
-# package
-
-my $package;
-
-BEGIN {
-  $package = 'Tekki::Onedrive::Database';
-  use_ok $package or exit;
-}
-
-my $parent = 'Mojo::Base';
-
-isa_ok $package, $package;
-isa_ok $package, $parent;
-
-# constants
-
-my @fields = qw|ctag etag file folder lastmodified modifiedby name
-  package parent_id remote sha1|;
-
-is_deeply $package->ITEM_FIELDS, \@fields, 'List of item fields';
-
-# methods
-
-can_ok $package, $_
-  for qw|add_tasks create_item delete_item find_item log next_task task_failed|,
-  qw|task_ignored task_succeeded update_item|;
-
 # test db
 
 ok my $tempdir = Mojo::File::tempdir, 'Create temp folder';
-ok my $db = $package->new($tempdir), 'Create db object';
+ok my $db = Tekki::Onedrive::Database->new($tempdir), 'Create db object';
 
 # add tasks
 
@@ -75,9 +50,7 @@ ok my $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
 ok my $actions = $db->find_differences($item), 'Find differences';
 
 my %expected
-  = (
-  create => {name => 'root', parent_path => '', full_path => 'root',}
-  );
+  = (create => {name => 'root', parent_path => '', full_path => 'root',});
 
 is_deeply $actions, \%expected, 'Action description';
 
@@ -106,7 +79,8 @@ push $log_entries{success}->@*, $log_entry->($item, 'create');
 ok my $db_item = $db->find_item($item), 'Find item in db';
 subtest 'Content of item in db' => sub {
   is $db_item->{item_id}, $item->id, "Item ID is $item->{id}";
-  is $db_item->{$_}, $item->$_, "$_ is $item->{$_}" for @fields;
+  is $db_item->{$_}, $item->$_, "$_ is $item->{$_}"
+    for Tekki::Onedrive::Database->ITEM_FIELDS->@*;
 };
 
 # create second folder
@@ -133,7 +107,8 @@ push $log_entries{success}->@*, $log_entry->($item, 'create');
 ok $db_item = $db->find_item($item), 'Find item in db';
 subtest 'Content of item in db' => sub {
   is $db_item->{item_id}, $item->id, "Item ID is $item->{id}";
-  is $db_item->{$_}, $item->$_, "$_ is $item->{$_}" for @fields;
+  is $db_item->{$_}, $item->$_, "$_ is $item->{$_}"
+    for Tekki::Onedrive::Database->ITEM_FIELDS->@*;
 };
 
 # delete file before it exists
@@ -179,7 +154,8 @@ push $log_entries{success}->@*, $log_entry->($item, 'create');
 ok $db_item = $db->find_item($item), 'Find item in db';
 subtest 'Content of item in db' => sub {
   is $db_item->{item_id}, $item->id, "Item ID is $item->{id}";
-  is $db_item->{$_}, $item->$_, "$_ is $item->{$_}" for @fields;
+  is $db_item->{$_}, $item->$_, "$_ is $item->{$_}"
+    for Tekki::Onedrive::Database->ITEM_FIELDS->@*;
 };
 
 # skip create folder
@@ -323,7 +299,8 @@ ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
-%expected = (delete => {full_path => 'Documents/Vorlagen/Testdocument Renamed.txt',});
+%expected
+  = (delete => {full_path => 'Documents/Vorlagen/Testdocument Renamed.txt',});
 
 is_deeply $actions, \%expected, 'Action description';
 

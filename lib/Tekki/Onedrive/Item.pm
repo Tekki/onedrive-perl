@@ -21,7 +21,7 @@ sub new ($class, $content) {
 # methods
 
 has [qw|id ctag etag lastmodified name|];
-has [qw|modifiedby package parent_id parent_path sha1|] => '';
+has [qw|modifiedby package parent_id parent_path quickxor sha1|] => '';
 has [qw|deleted file folder remote root size|] => 0;
 
 sub exists ($self) {
@@ -56,10 +56,13 @@ sub mtime ($self) {
 sub update ($self, $content) {
 
   # process content
-  $self->$_($content->{$_}) for qw|id name|;
+  for (qw|id name|) {
+      $self->$_($content->{$_}) if $content->{$_}; 
+  }
 
   $self->lastmodified($content->{lastModifiedDateTime});
-  $self->modifiedby($content->{lastModifiedBy}->{user}->{displayName});
+  $self->modifiedby($content->{lastModifiedBy}->{user}->{displayName})
+    if $content->{lastModifiedBy};
 
   if ($content->{remoteItem}) {
     $self->$_($content->{remoteItem}->{$_} ? 1 : 0) for qw|file folder package|;
@@ -72,10 +75,12 @@ sub update ($self, $content) {
 
   $self->ctag($content->{cTag} || '');
   $self->etag($content->{eTag} || '');
-  if (my $file = $content->{file}) {
-    if ($file->{hashes}) {
-      $self->sha1(lc $file->{hashes}->{sha1Hash})
-        if $file->{hashes}->{sha1Hash};
+  if ($content->{deleted}) {
+    $self->deleted(1);
+  } elsif (my $file = $content->{file}) {
+    if (my $hashes = $file->{hashes}) {
+      $self->sha1(lc $hashes->{sha1Hash}) if $hashes->{sha1Hash};
+      $self->quickxor($hashes->{quickXorHash}) if $hashes->{quickXorHash};
     } else {
       $self->deleted(1);
     }
@@ -84,7 +89,11 @@ sub update ($self, $content) {
   # parent
   if (my $parent = $content->{parentReference} and !$content->{root}) {
     $self->parent_id($parent->{id});
-    my $parent_path = decode 'UTF-8', url_unescape $parent->{path} || '';
+    my $parent_path = $parent->{path} || '';
+
+    # personal only
+    $parent_path = decode 'UTF-8', url_unescape $parent_path if $parent->{name};
+
     $parent_path =~ s|.*?:/?||;
     $self->parent_path($parent_path);
   } else {

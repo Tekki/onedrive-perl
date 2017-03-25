@@ -1,14 +1,14 @@
 use Mojo::Base -strict;
 
-use Test::More tests => 56;
+use Test::More tests => 35;
 
 use Mojo::File;
 use Mojo::JSON 'decode_json';
 
 # test values
 
-my %testitem = eval Mojo::File::path(__FILE__)->sibling('testitem_personal.pl')
-  ->slurp;
+my %testitem
+  = eval Mojo::File::path(__FILE__)->sibling('testitem_personal.pl')->slurp;
 
 # package
 
@@ -28,10 +28,12 @@ isa_ok $package, $parent;
 
 # methods
 
-can_ok $package, $_
-  for qw|id ctag etag lastmodified name parent_id parent_path|,
-  qw|modifiedby sha1 deleted file folder package remote root size|,
-  qw|exists exists_identical full_path mtime update update_mtime|;
+subtest 'Methods' => sub {
+  can_ok $package, $_
+    for qw|id ctag etag lastmodified name parent_id parent_path|,
+    qw|modifiedby sha1 quickxor deleted file folder package remote root size|,
+    qw|exists exists_identical full_path mtime update update_mtime|;
+};
 
 # temp dir
 

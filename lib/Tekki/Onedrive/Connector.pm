@@ -4,7 +4,7 @@ use Mojo::Base -base;
 use feature 'signatures';
 no warnings 'experimental::signatures';
 
-our $VERSION = 0.60;
+our $VERSION = '0.80';
 
 use Data::Dump 'pp';
 use Digest::SHA 'sha1_hex';
@@ -255,7 +255,7 @@ sub synchronize ($self) {
 
       # delete
       if (my $delete = $actions->{delete}) {
-        unlink $delete->{full_path};
+        $delete->{full_path}->remove_tree;
         say '  deleted' if $self->verbose;
 
         $db->delete_item($item);
@@ -280,7 +280,8 @@ sub synchronize ($self) {
       if ($self->debug) {
         my $path     = path("$ENV{HOME}/temp")->make_path;
         my $filename = $config->description . '_delta_';
-        my $i        = 1;
+        $filename =~ s/\W+/_/g;
+        my $i = 1;
         $i++ while -f $path->child("$filename$i.txt");
         $path->child("$filename$i.txt")->spurt($tx->success->body);
       }
@@ -303,7 +304,6 @@ sub synchronize ($self) {
 
 sub test ($self) {
   my $config = Tekki::Onedrive::Config->new($self->destination);
-  my $token  = $self->_get_token($config);
 
   while (1) {
     print 'URL: ';
@@ -312,6 +312,7 @@ sub test ($self) {
 
     $url =~ s/<%(.*?)%>/$config->$1/ge;
     my $ua = Mojo::UserAgent->new;
+    my $token  = $self->_get_token($config);
     my $tx = $ua->get($url, {Authorization => "Bearer $token"});
     if ($tx->error) {
       warn $self->_error($tx);
@@ -322,7 +323,8 @@ sub test ($self) {
     if ($self->debug) {
       my $path     = path("$ENV{HOME}/temp")->make_path;
       my $filename = $config->description . '_test_';
-      my $i        = 1;
+      $filename =~ s/\W+/_/g;
+      my $i = 1;
       $i++ while -f $path->child("$filename$i.txt");
       $path->child("$filename$i.txt")->spurt($tx->success->body);
     }
@@ -346,7 +348,8 @@ sub _download_content ($self, $item, $path, $config) {
   die $self->_error($tx) if $tx->error;
 
   my $json = $tx->success->json;
-  $item->update($json);
+  my $hashes = $json->{file}->{hashes};
+  $item->($hashes->{sha1Hash}) if $hashes->{sha1Hash};
 
   # download
   $url = $json->{'@microsoft.graph.downloadUrl'};
@@ -360,8 +363,11 @@ sub _download_content ($self, $item, $path, $config) {
 
   $tx->success->content->asset->move_to($path);
 
-  die encode 'UTF-8', "Download of $item->{name} failed!"
-    unless $item->exists_identical;
+  if ($config->drive_type eq 'personal') {
+    # not yet working on business
+    die encode 'UTF-8', "Download of $item->{name} failed!"
+      unless $item->exists_identical;
+  }
 
   say '  content downloaded' if $self->verbose;
 }
