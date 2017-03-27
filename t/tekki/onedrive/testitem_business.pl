@@ -293,4 +293,197 @@
       size             => 540,
     },
   },
+  file1_moved => {
+    json => decode_json(
+      q|{
+  "@odata.type" : "#microsoft.graph.driveItem",
+  "createdDateTime" : "2017-03-24T18:23:29Z",
+  "eTag" : "\"{A0092AFB-30E5-4371-879F-4A9908637117},3\"",
+  "id" : "01QNYR5IX3FIE2BZJQOFBYPH2KTEEGG4IX",
+  "lastModifiedDateTime" : "2017-03-24T18:23:29Z",
+  "name" : "\u00dcber uns.txt",
+  "webUrl" : "https://contoso-my.sharepoint.com/personal/tekki_contoso_onmicrosoft_com/Documents/First%20Folder/%C3%9Cber%20uns.txt",
+  "file" : {
+    "hashes" : {
+      "quickXorHash" : "gr+5bWt6heJUst7iz1uXq0kyGtQ="
+    }
+  },
+  "fileSystemInfo" : {
+    "createdDateTime" : "2017-03-24T18:23:29Z",
+    "lastModifiedDateTime" : "2017-03-24T18:23:29Z"
+  },
+  "parentReference" : {
+    "driveId" : "b!Ewo_rxEa0ga6p9o-ros1s3OqVKra_UDw5V5DLrDkFPVRI0LjLUjH",
+    "id" : "01QNYR5IQJQN3KHPNCOJGI6ODZQL4C4GRV",
+    "path" : "/drive/root:/First Folder"
+  },
+  "size" : 456
+}|
+    ),
+    content => {
+      id      => '01QNYR5IX3FIE2BZJQOFBYPH2KTEEGG4IX',
+      ctag    => '',
+      deleted => 0,
+      etag    => '"{A0092AFB-30E5-4371-879F-4A9908637117},3"',
+      exists  => 0,
+      exists_identical => 0,
+      file             => 1,
+      folder           => 0,
+      full_path        => 'First Folder/Über uns.txt',
+      lastmodified     => '2017-03-24T18:23:29Z',
+      modifiedby       => '',
+      name             => 'Über uns.txt',
+      mtime            => '',
+      package          => 0,
+      parent_id        => '01QNYR5IQJQN3KHPNCOJGI6ODZQL4C4GRV',
+      parent_path      => 'First Folder',
+      quickxor         => 'gr+5bWt6heJUst7iz1uXq0kyGtQ=',
+      remote           => 0,
+      root             => 0,
+      sha1             => '',
+      size             => 456,
+    },
+  },
+  file1_deleted => {
+    json => decode_json(
+      q|{
+  "@odata.type" : "#microsoft.graph.driveItem",
+  "createdDateTime" : "0001-01-01T08:00:00Z",
+  "id" : "01QNYR5IX3FIE2BZJQOFBYPH2KTEEGG4IX",
+  "lastModifiedDateTime" : "0001-01-01T08:00:00Z",
+  "deleted" : {
+    "state" : "deleted"
+  },
+  "file" : {},
+  "fileSystemInfo" : {
+    "createdDateTime" : "0001-01-01T08:00:00Z",
+    "lastModifiedDateTime" : "0001-01-01T08:00:00Z"
+  },
+  "parentReference" : {
+    "driveId" : "b!Ewo_rxEa0ga6p9o-ros1s3OqVKra_UDw5V5DLrDkFPVRI0LjLUjH",
+    "id" : "01QNYR5IQJQN3KHPNCOJGI6ODZQL4C4GRV"
+  },
+  "size" : 0
+}|
+    ),
+    content => {
+      id      => '01QNYR5IX3FIE2BZJQOFBYPH2KTEEGG4IX',
+      ctag    => '',
+      deleted => 1,
+      etag    => '',
+      exists  => 0,
+      exists_identical => 0,
+      file             => 1,
+      folder           => 0,
+      full_path        => '',
+      lastmodified     => '0001-01-01T08:00:00Z',
+      modifiedby       => '',
+      name             => '',
+      mtime            => '',
+      package          => 0,
+      parent_id        => '01QNYR5IQJQN3KHPNCOJGI6ODZQL4C4GRV',
+      parent_path      => '',
+      quickxor         => '',
+      remote           => 0,
+      root             => 0,
+      sha1             => '',
+      size             => 0,
+    },
+  },
+  folder1_deleted => {
+    json => decode_json(
+      q|{
+  "@odata.type" : "#microsoft.graph.driveItem",
+  "createdDateTime" : "0001-01-01T08:00:00Z",
+  "id" : "01QNYR5IQJQN3KHPNCOJGI6ODZQL4C4GRV",
+  "lastModifiedDateTime" : "0001-01-01T08:00:00Z",
+  "deleted" : {
+    "state" : "deleted"
+  },
+  "fileSystemInfo" : {
+    "createdDateTime" : "0001-01-01T08:00:00Z",
+    "lastModifiedDateTime" : "0001-01-01T08:00:00Z"
+  },
+  "folder" : {
+    "childCount" : 0
+  },
+  "parentReference" : {
+    "driveId" : "b!Ewo_rxEa0ga6p9o-ros1s3OqVKra_UDw5V5DLrDkFPVRI0LjLUjH",
+    "id" : "01QNYR5IV6Y2GOVW7725BZO354PWSELRRZ"
+  },
+  "size" : 0
+}|
+    ),
+    content => {
+      id      => '01QNYR5IQJQN3KHPNCOJGI6ODZQL4C4GRV',
+      ctag    => '',
+      deleted => 1,
+      etag    => '',
+      exists  => 0,
+      exists_identical => 0,
+      file             => 0,
+      folder           => 1,
+      full_path        => '',
+      lastmodified     => '0001-01-01T08:00:00Z',
+      modifiedby       => '',
+      name             => '',
+      mtime            => '',
+      package          => 0,
+      parent_id        => '01QNYR5IV6Y2GOVW7725BZO354PWSELRRZ',
+      parent_path      => '',
+      quickxor         => '',
+      remote           => 0,
+      root             => 0,
+      sha1             => '',
+      size             => 0,
+    },
+  },
+  folder2_deleted => {
+    json => decode_json(
+      q|{
+  "@odata.type" : "#microsoft.graph.driveItem",
+  "createdDateTime" : "0001-01-01T08:00:00Z",
+  "id" : "01QNYR5IVG6ZQQRFELVJALPDOV4CFMZDIO",
+  "lastModifiedDateTime" : "0001-01-01T08:00:00Z",
+  "deleted" : {
+    "state" : "deleted"
+  },
+  "fileSystemInfo" : {
+    "createdDateTime" : "0001-01-01T08:00:00Z",
+    "lastModifiedDateTime" : "0001-01-01T08:00:00Z"
+  },
+  "folder" : {
+    "childCount" : 0
+  },
+  "parentReference" : {
+    "driveId" : "b!Ewo_rxEa0ga6p9o-ros1s3OqVKra_UDw5V5DLrDkFPVRI0LjLUjH",
+    "id" : "01QNYR5IQJQN3KHPNCOJGI6ODZQL4C4GRV"
+  },
+  "size" : 0
+}|
+    ),
+    content => {
+      id      => '01QNYR5IVG6ZQQRFELVJALPDOV4CFMZDIO',
+      ctag    => '',
+      deleted => 1,
+      etag    => '',
+      exists  => 0,
+      exists_identical => 0,
+      file             => 0,
+      folder           => 1,
+      full_path        => '',
+      lastmodified     => '0001-01-01T08:00:00Z',
+      modifiedby       => '',
+      name             => '',
+      mtime            => '',
+      package          => 0,
+      parent_id        => '01QNYR5IQJQN3KHPNCOJGI6ODZQL4C4GRV',
+      parent_path      => '',
+      quickxor         => '',
+      remote           => 0,
+      root             => 0,
+      sha1             => '',
+      size             => 0,
+    },
+  },
 );

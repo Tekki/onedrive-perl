@@ -1,6 +1,6 @@
 use Mojo::Base -strict;
 
-use Test::More tests => 15;
+use Test::More tests => 16;
 
 use Mojo::File;
 use Mojo::JSON 'decode_json';
@@ -32,13 +32,8 @@ ok my $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
 
 ok my $actions = $db->find_differences($item), 'Find differences';
 
-my %expected = (
-  create => {
-    name        => 'Shared with Cubulon',
-    parent_path => '',
-    full_path   => 'Shared with Cubulon',
-    }
-);
+my %expected = (create =>
+    {name => 'Shared with Cubulon', full_path => 'Shared with Cubulon',},);
 
 is_deeply $actions, \%expected, 'Action description';
 
@@ -54,10 +49,9 @@ ok $actions = $db->find_differences($item), 'Find differences';
 
 %expected = (
   create => {
-    name        => 'Document for Cubulon.txt',
-    parent_path => '',
-    full_path   => 'Document for Cubulon.txt',
-    }
+    name      => 'Document for Cubulon.txt',
+    full_path => 'Document for Cubulon.txt',
+  },
 );
 
 is_deeply $actions, \%expected, 'Action description';
@@ -65,4 +59,6 @@ is_deeply $actions, \%expected, 'Action description';
 is $db->create_item($item), $db, 'Add item to db';
 is $db->task_succeeded($task, $item, 'create'), $db, 'Log entry';
 
+# no more tasks
 
+ok !$db->next_task, 'No more tasks';

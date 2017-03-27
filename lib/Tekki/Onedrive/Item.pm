@@ -20,15 +20,16 @@ sub new ($class, $content) {
 
 # methods
 
-has [qw|id ctag etag lastmodified name|];
-has [qw|modifiedby package parent_id parent_path quickxor sha1|] => '';
+has [qw|id ctag etag lastmodified|];
+has [qw|modifiedby name package parent_id parent_path quickxor sha1|] => '';
 has [qw|deleted file folder remote root size|] => 0;
 
 sub exists ($self) {
+  my $path = $self->full_path or return 0;
   if ($self->file) {
-    return -f $self->full_path || 0;
+    return -f $path || 0;
   } else {
-    return -d $self->full_path || 0;
+    return -d $path || 0;
   }
 }
 

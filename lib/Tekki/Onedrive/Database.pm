@@ -81,7 +81,6 @@ sub find_differences ($self, $item) {
       # path and name
       $actions{move} = {
         new_name        => $item->name,
-        new_parent_path => $item->parent_path,
         new_path        => $item->full_path,
         old_path        => $db_item->{full_path},
       };
@@ -100,7 +99,6 @@ sub find_differences ($self, $item) {
     # new item
     $actions{create} = {
       name        => $item->name,
-      parent_path => $item->parent_path,
       full_path   => $item->full_path,
     };
   }

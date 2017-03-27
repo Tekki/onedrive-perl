@@ -179,7 +179,7 @@ sub synchronize ($self) {
     while (my $task = $db->next_task) {
       my $item = Tekki::Onedrive::Item->new($task->{description});
 
-      say encode 'UTF-8', "$task->{id}: $item->{name}" if $self->verbose;
+      say encode 'UTF-8', "$task->{id}: " . $item->name if $self->verbose;
 
       my $actions = $db->find_differences($item);
       unless (keys $actions->%*) {
@@ -311,9 +311,9 @@ sub test ($self) {
     last unless $url;
 
     $url =~ s/<%(.*?)%>/$config->$1/ge;
-    my $ua = Mojo::UserAgent->new;
-    my $token  = $self->_get_token($config);
-    my $tx = $ua->get($url, {Authorization => "Bearer $token"});
+    my $ua    = Mojo::UserAgent->new;
+    my $token = $self->_get_token($config);
+    my $tx    = $ua->get($url, {Authorization => "Bearer $token"});
     if ($tx->error) {
       warn $self->_error($tx);
       next;
@@ -347,9 +347,9 @@ sub _download_content ($self, $item, $path, $config) {
   my $tx = $ua->get($url, {Authorization => "Bearer $token"});
   die $self->_error($tx) if $tx->error;
 
-  my $json = $tx->success->json;
+  my $json   = $tx->success->json;
   my $hashes = $json->{file}->{hashes};
-  $item->($hashes->{sha1Hash}) if $hashes->{sha1Hash};
+  $item->sha1(lc $hashes->{sha1Hash}) if $hashes->{sha1Hash};
 
   # download
   $url = $json->{'@microsoft.graph.downloadUrl'};
@@ -364,6 +364,7 @@ sub _download_content ($self, $item, $path, $config) {
   $tx->success->content->asset->move_to($path);
 
   if ($config->drive_type eq 'personal') {
+
     # not yet working on business
     die encode 'UTF-8', "Download of $item->{name} failed!"
       unless $item->exists_identical;

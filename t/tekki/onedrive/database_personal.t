@@ -2,7 +2,7 @@ use Mojo::Base -strict;
 use feature 'signatures';
 no warnings 'experimental::signatures';
 
-use Test::More tests => 108;
+use Test::More tests => 107;
 
 use Mojo::File;
 use Mojo::JSON 'decode_json';
@@ -44,13 +44,13 @@ my $log_entry = sub ($item, $action) {
 
 # root
 
-ok my $task = $db->next_task, 'Get first task';
+ok my $task = $db->next_task, 'Get root item';
 ok my $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
 
 ok my $actions = $db->find_differences($item), 'Find differences';
 
 my %expected
-  = (create => {name => 'root', parent_path => '', full_path => 'root',});
+  = (create => {name => 'root', full_path => 'root',});
 
 is_deeply $actions, \%expected, 'Action description';
 
@@ -65,9 +65,9 @@ ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
-ok %expected
+%expected
   = (
-  create => {name => 'Dokumente', parent_path => '', full_path => 'Dokumente',}
+  create => {name => 'Dokumente', full_path => 'Dokumente',}
   );
 
 is_deeply $actions, \%expected, 'Action description';
@@ -93,7 +93,6 @@ ok $actions = $db->find_differences($item), 'Find differences';
 %expected = (
   create => {
     name        => 'Vorlagen',
-    parent_path => 'Dokumente',
     full_path   => 'Dokumente/Vorlagen',
   }
 );
@@ -132,7 +131,6 @@ ok $actions = $db->find_differences($item), 'Find differences';
 %expected = (
   create => {
     name        => 'Testdocument.txt',
-    parent_path => 'Dokumente/Vorlagen',
     full_path   => 'Dokumente/Vorlagen/Testdocument.txt',
   }
 );
@@ -178,7 +176,6 @@ ok $actions = $db->find_differences($item), 'Find differences';
 %expected = (
   create => {
     name        => 'Notizbuch von Cubulon',
-    parent_path => 'Dokumente',
     full_path   => 'Dokumente/Notizbuch von Cubulon',
   }
 );
@@ -214,7 +211,6 @@ ok $actions = $db->find_differences($item), 'Find differences';
 %expected = (
   move => {
     new_name        => 'Testdocument Renamed.txt',
-    new_parent_path => 'Dokumente/Vorlagen',
     new_path        => 'Dokumente/Vorlagen/Testdocument Renamed.txt',
     old_path        => 'Dokumente/Vorlagen/Testdocument.txt',
   }
@@ -236,7 +232,6 @@ ok $actions = $db->find_differences($item), 'Find differences';
 %expected = (
   move => {
     new_name        => 'Testdocument Renamed.txt',
-    new_parent_path => 'Dokumente',
     new_path        => 'Dokumente/Testdocument Renamed.txt',
     old_path        => 'Dokumente/Vorlagen/Testdocument Renamed.txt',
   }
@@ -258,7 +253,6 @@ ok $actions = $db->find_differences($item), 'Find differences';
 %expected = (
   move => {
     new_name        => 'Documents',
-    new_parent_path => '',
     new_path        => 'Documents',
     old_path        => 'Dokumente',
   }
@@ -280,7 +274,6 @@ ok $actions = $db->find_differences($item), 'Find differences';
 %expected = (
   move => {
     new_name        => 'Testdocument Renamed.txt',
-    new_parent_path => 'Documents/Vorlagen',
     new_path        => 'Documents/Vorlagen/Testdocument Renamed.txt',
     old_path        => 'Documents/Testdocument Renamed.txt',
   }
