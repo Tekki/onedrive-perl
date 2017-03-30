@@ -16,12 +16,19 @@ use Mojo::Util qw|decode encode|;
 
 use Tekki::Onedrive::Config;
 use Tekki::Onedrive::Database;
-use Tekki::Onedrive::GlobalConfig;
 use Tekki::Onedrive::Item;
 
 # constants
 
-use constant {WAIT_FOR_RETRY => 10, MAX_RETRIES => 5,};
+use constant {
+  AUTH_URL  => 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+  BETA_URL  => 'https://graph.microsoft.com/beta',
+  CLIENT_ID => '5a968bc0-ba11-4d28-8837-16f5a8a825aa',
+  GRAPH_URL => 'https://graph.microsoft.com/v1.0',
+  REDIRECT_URI =>
+    'https://login.microsoftonline.com/common/oauth2/nativeclient',
+  TOKEN_URL => 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+};
 
 # constructor
 
@@ -38,9 +45,6 @@ has ['debug', 'destination', 'verbose'];
 
 sub authenticate ($self) {
 
-  # globals
-  my $globals = Tekki::Onedrive::GlobalConfig->new;
-
   # check destination
   my $path = path($self->destination)->make_path;
   $path->child($_)->make_path for qw|config documents|;
@@ -49,11 +53,11 @@ sub authenticate ($self) {
   my $config = Tekki::Onedrive::Config->new($path);
 
   # get authorization code
-  my $url = Mojo::URL->new($globals->value('auth_url'))->query(
-    client_id     => $globals->value('client_id'),
+  my $url = Mojo::URL->new(AUTH_URL)->query(
+    client_id     => CLIENT_ID,
     scope         => "user.read files.read files.read.all offline_access",
     response_type => 'code',
-    redirect_uri  => $globals->value('redirect_uri'),
+    redirect_uri  => REDIRECT_URI,
   );
   say
     qq|Open the following link in your browser and allow the application to access your drive:\n$url\n|;
@@ -66,12 +70,12 @@ sub authenticate ($self) {
   # redeem code for access tokens
   my $ua   = Mojo::UserAgent->new;
   my %form = (
-    client_id    => $globals->value('client_id'),
-    redirect_uri => $globals->value('redirect_uri'),
+    client_id    => CLIENT_ID,
+    redirect_uri => REDIRECT_URI,
     code         => $code,
     grant_type   => 'authorization_code',
   );
-  my $tx = $ua->post($globals->value('token_url'), form => \%form);
+  my $tx = $ua->post(TOKEN_URL, form => \%form);
   die $self->_error($tx) if $tx->error;
   my $response = $tx->success->json;
   say 'Authentication successful.' if $self->verbose;
@@ -87,10 +91,8 @@ sub authenticate ($self) {
     my $ua = Mojo::UserAgent->new;
 
     # my own
-    my $tx = $ua->get(
-      $globals->value('drive_url') . '/me/drive',
-      {Authorization => "Bearer $response->{access_token}"}
-    );
+    my $tx = $ua->get(GRAPH_URL . '/me/drive',
+      {Authorization => "Bearer $response->{access_token}"});
     die $self->_error($tx) if $tx->error;
     my $own        = $tx->success->json;
     my $drive_type = $own->{driveType};
@@ -99,10 +101,8 @@ sub authenticate ($self) {
     push @drives, $own;
 
     # shared with me
-    $tx = $ua->get(
-      $globals->value('drive_url') . '/me/drive/sharedWithMe',
-      {Authorization => "Bearer $response->{access_token}"}
-    );
+    $tx = $ua->get(GRAPH_URL . '/me/drive/sharedWithMe',
+      {Authorization => "Bearer $response->{access_token}"});
     die $self->_error($tx) if $tx->error;
 
     for my $shared ($tx->success->json->{value}->@*) {
@@ -132,8 +132,8 @@ sub authenticate ($self) {
       # shared folder
       $config->item_id($remote->{id});
       $config->drive_id($remote->{parentReference}->{driveId});
-      $config->drive_url($globals->value('drive_url')
-          . "/drives/$remote->{parentReference}->{driveId}");
+      $config->drive_url(
+        GRAPH_URL . "/drives/$remote->{parentReference}->{driveId}");
       $config->owner($remote->{createdBy}->{user}->{displayName});
       $config->remote(1);
 
@@ -141,7 +141,7 @@ sub authenticate ($self) {
 
       # my own drive
       $config->drive_id($drive->{id});
-      $config->drive_url($globals->value('drive_url') . '/me/drive');
+      $config->drive_url(GRAPH_URL . '/me/drive');
       $config->owner($drive->{owner}->{user}->{displayName});
 
     }
@@ -306,11 +306,14 @@ sub test ($self) {
   my $config = Tekki::Onedrive::Config->new($self->destination);
 
   while (1) {
-    print 'URL: ';
+    print "\nURL: ";
     chomp(my $url = <STDIN>);
     last unless $url;
 
+    $url =~ s/<%graph%>/GRAPH_URL/e;
+    $url =~ s/<%beta%>/BETA_URL/e;
     $url =~ s/<%(.*?)%>/$config->$1/ge;
+    say "$url\n";
     my $ua    = Mojo::UserAgent->new;
     my $token = $self->_get_token($config);
     my $tx    = $ua->get($url, {Authorization => "Bearer $token"});
@@ -393,13 +396,12 @@ sub _error ($self, $tx) {
 
 sub _get_token ($self, $config) {
   if ($config->expires_in < 60) {
-    my $globals = Tekki::Onedrive::GlobalConfig->new;
 
     my $ua   = Mojo::UserAgent->new;
-    my $url  = $globals->value('token_url');
+    my $url  = TOKEN_URL;
     my %form = (
-      client_id     => $globals->value('client_id'),
-      redirect_uri  => $globals->value('redirect_uri'),
+      client_id     => CLIENT_ID,
+      redirect_uri  => REDIRECT_URI,
       refresh_token => $config->refresh_token,
       grant_type    => 'refresh_token',
     );
