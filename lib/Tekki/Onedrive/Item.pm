@@ -58,10 +58,12 @@ sub update ($self, $content) {
 
   # process content
   for (qw|id name|) {
-      $self->$_($content->{$_}) if $content->{$_}; 
+    $self->$_($content->{$_}) if $content->{$_};
   }
 
-  $self->lastmodified($content->{lastModifiedDateTime});
+  $self->lastmodified($content->{fileSystemInfo}
+    ? $content->{fileSystemInfo}->{lastModifiedDateTime}
+    : $content->{lastModifiedDateTime});
   $self->modifiedby($content->{lastModifiedBy}->{user}->{displayName})
     if $content->{lastModifiedBy};
 

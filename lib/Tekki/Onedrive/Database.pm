@@ -80,12 +80,14 @@ sub find_differences ($self, $item) {
 
       # path and name
       $actions{move} = {
-        new_name        => $item->name,
-        new_path        => $item->full_path,
-        old_path        => $db_item->{full_path},
+        new_name => $item->name,
+        new_path => $item->full_path,
+        old_path => $db_item->{full_path},
       };
 
-    } elsif ($db_item->{ctag} ne $item->ctag) {
+    } elsif ($db_item->{ctag} ne $item->ctag
+      || $db_item->{quickxor} ne $item->quickxor)
+    {
 
       # content
       if ($item->folder || $item->package) {
@@ -97,10 +99,7 @@ sub find_differences ($self, $item) {
   } elsif (!$item->deleted && !$item->remote) {
 
     # new item
-    $actions{create} = {
-      name        => $item->name,
-      full_path   => $item->full_path,
-    };
+    $actions{create} = {name => $item->name, full_path => $item->full_path,};
   }
   return \%actions;
 }

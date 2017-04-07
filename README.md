@@ -23,7 +23,7 @@ OneDrive-Perl is a backup client for OneDrive Personal and OneDrive for Business
 The next steps are:
   * ~~support for remote items (files and folders shared with me)~~
   * ~~support for OneDrive for Business~~
-  * support for SharePoint
+  * support for SharePoint (waiting for Microsoft to improve the API)
   * possibility to upload a big amount of data to OneDrive and SharePoint
 
 ## Installation
