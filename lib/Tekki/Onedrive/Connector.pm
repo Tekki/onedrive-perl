@@ -276,6 +276,14 @@ sub synchronize ($self) {
 
       my $response = $tx->success->json;
 
+      # update next or delta link
+      if ($response->{'@odata.nextLink'}) {
+        $config->next_link($response->{'@odata.nextLink'});
+      } else {
+        $config->delta_link($response->{'@odata.deltaLink'});
+        $download_more = 0;
+      }
+
       # debug
       if ($self->debug) {
         my $path     = path("$ENV{HOME}/temp")->make_path;
@@ -290,14 +298,6 @@ sub synchronize ($self) {
       my $counter = $db->add_tasks($response->{value});
       say "\n$counter new tasks downloaded\n" if $self->verbose;
       $continue = $counter ? 1 : 0;
-
-      # download more instructions or not
-      if ($response->{'@odata.nextLink'}) {
-        $config->next_link($response->{'@odata.nextLink'});
-      } else {
-        $config->delta_link($response->{'@odata.deltaLink'});
-        $download_more = 0;
-      }
     }
   }
 }
@@ -341,6 +341,7 @@ sub _download_content ($self, $item, $path, $config) {
     say '  download skipped' if $self->verbose;
     return;
   }
+
 
   # update metadata
   my $ua    = Mojo::UserAgent->new;

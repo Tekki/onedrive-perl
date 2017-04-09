@@ -94,8 +94,9 @@ sub update ($self, $content) {
     $self->parent_id($parent->{id});
     my $parent_path = $parent->{path} || '';
 
-    # personal only
-    $parent_path = decode 'UTF-8', url_unescape $parent_path if $parent->{name};
+    # decode and unescape
+    $parent_path = decode 'UTF-8', url_unescape $parent_path
+      if $parent_path =~ /%/;
 
     $parent_path =~ s|.*?:/?||;
     $self->parent_path($parent_path);

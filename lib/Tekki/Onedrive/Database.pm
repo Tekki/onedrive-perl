@@ -85,8 +85,8 @@ sub find_differences ($self, $item) {
         old_path => $db_item->{full_path},
       };
 
-    } elsif ($db_item->{ctag} ne $item->ctag
-      || $db_item->{quickxor} ne $item->quickxor)
+    } elsif (($item->ctag && $db_item->{ctag} ne $item->ctag)
+      || ($item->quickxor && $db_item->{quickxor} ne $item->quickxor))
     {
 
       # content

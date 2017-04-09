@@ -53,7 +53,7 @@ sub delta_link ($self, $newvalue = undef) {
     my $rv;
     if ($self->{next_link}) {
       $rv = '';
-    } elsif (exists $self->{delta_link}) {
+    } elsif ($self->{delta_link}) {
       $rv = $self->{delta_link};
     } elsif ($self->remote) {
       $rv = $self->drive_url . '/items/' . $self->item_id . '/delta';
