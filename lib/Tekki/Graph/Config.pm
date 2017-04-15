@@ -1,4 +1,4 @@
-package Tekki::Onedrive::Config;
+package Tekki::Graph::Config;
 
 use Mojo::Base -base;
 use feature 'signatures';
@@ -97,7 +97,7 @@ sub save ($self) {
 
 =head1 NAME
 
-Tekki::Onedrive::Config - The configuration of a specific destination.
+Tekki::Graph::Config - The configuration of a specific destination.
 
 =head1 COPYRIGHT AND LICENSE
 

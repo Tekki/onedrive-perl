@@ -1,6 +1,6 @@
 # OneDrive-Perl
 
-A Perl client for OneDrive Personal and OneDrive for Business.
+A Perl client for Microsoft Graph services like OneDrive Personal or OneDrive for Business.
 
 **Warning: As long as you see this message, the code in this repo is still experimental. Don't be surprised if you download incompatible changes with git pull.**
 (If you run into incompatibilities, reset your connection. Delete all files in `destination/config`, reathenticate and synchronize again.)
@@ -18,7 +18,7 @@ A Perl client for OneDrive Personal and OneDrive for Business.
 
 ## Features
 
-OneDrive-Perl is a backup client for OneDrive Personal and OneDrive for Business, i.e. a program that mirrors all the changes on your own or on shared drives to a local machine, using the [Graph API](https://developer.microsoft.com/en-us/graph/) and obviously written in [Perl](https://www.perl.org). It is allowed to crash, but not to lose a single operation. It doesn't perform a two-way synchronization (and probably will never do).
+OneDrive-Perl is a backup client for Microsoft Graph services like OneDrive Personal or OneDrive for Business, i.e. a program that mirrors all the changes on your cloud service to a local machine, using the [Graph API](https://developer.microsoft.com/en-us/graph/) and obviously written in [Perl](https://www.perl.org). It is allowed to crash, but not to lose a single operation. It doesn't perform a two-way synchronization (and probably will never do).
 
 The next steps are:
   * ~~support for remote items (files and folders shared with me)~~

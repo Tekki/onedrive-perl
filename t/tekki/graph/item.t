@@ -15,7 +15,7 @@ my %testitem
 my $package;
 
 BEGIN {
-  $package = 'Tekki::Onedrive::Item';
+  $package = 'Tekki::Graph::Item';
   use_ok $package or exit;
 }
 

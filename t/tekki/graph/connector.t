@@ -5,7 +5,7 @@ use Test::More tests => 8;
 my $package;
 
 BEGIN {
-  $package = 'Tekki::Onedrive::Connector';
+  $package = 'Tekki::Graph::Connector';
   use_ok $package or exit;
 }
 

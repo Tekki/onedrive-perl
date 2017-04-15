@@ -1,4 +1,4 @@
-package Tekki::Onedrive::Item;
+package Tekki::Graph::Item;
 use Mojo::Base -base;
 use feature 'signatures';
 no warnings 'experimental::signatures';
@@ -120,7 +120,7 @@ sub update_mtime ($self) {
 
 =head1 NAME
 
-Tekki::Onedrive::Item - An item on OneDrive.
+Tekki::Graph::Item - An item on OneDrive.
 
 =head1 COPYRIGHT AND LICENSE
 

@@ -8,8 +8,8 @@ use Mojo::File;
 use Mojo::JSON 'decode_json';
 
 
-use Tekki::Onedrive::Database;
-use Tekki::Onedrive::Item;
+use Tekki::Graph::Database;
+use Tekki::Graph::Item;
 
 # test values
 
@@ -19,7 +19,7 @@ my %testitem
 # test db
 
 ok my $tempdir = Mojo::File::tempdir, 'Create temp folder';
-ok my $db = Tekki::Onedrive::Database->new($tempdir), 'Create db object';
+ok my $db = Tekki::Graph::Database->new($tempdir), 'Create db object';
 
 # add tasks
 
@@ -45,7 +45,7 @@ my $log_entry = sub ($item, $action) {
 # root
 
 ok my $task = $db->next_task, 'Get root item';
-ok my $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok my $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok my $actions = $db->find_differences($item), 'Find differences';
 
@@ -61,7 +61,7 @@ push $log_entries{success}->@*, $log_entry->($item, 'create');
 # create first folder
 
 ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -80,13 +80,13 @@ ok my $db_item = $db->find_item($item), 'Find item in db';
 subtest 'Content of item in db' => sub {
   is $db_item->{item_id}, $item->id, "Item ID is $item->{id}";
   is $db_item->{$_}, $item->$_, "$_ is $item->{$_}"
-    for Tekki::Onedrive::Database->ITEM_FIELDS->@*;
+    for Tekki::Graph::Database->ITEM_FIELDS->@*;
 };
 
 # create second folder
 
 ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -107,13 +107,13 @@ ok $db_item = $db->find_item($item), 'Find item in db';
 subtest 'Content of item in db' => sub {
   is $db_item->{item_id}, $item->id, "Item ID is $item->{id}";
   is $db_item->{$_}, $item->$_, "$_ is $item->{$_}"
-    for Tekki::Onedrive::Database->ITEM_FIELDS->@*;
+    for Tekki::Graph::Database->ITEM_FIELDS->@*;
 };
 
 # delete file before it exists
 
 ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 is_deeply $actions, {}, 'No action';
@@ -124,7 +124,7 @@ is $db->task_ignored($task, $item), $db, 'Log entry';
 
 ok $task = $db->next_task, 'Get next task';
 my $task_id = $task->{id};
-ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -153,13 +153,13 @@ ok $db_item = $db->find_item($item), 'Find item in db';
 subtest 'Content of item in db' => sub {
   is $db_item->{item_id}, $item->id, "Item ID is $item->{id}";
   is $db_item->{$_}, $item->$_, "$_ is $item->{$_}"
-    for Tekki::Onedrive::Database->ITEM_FIELDS->@*;
+    for Tekki::Graph::Database->ITEM_FIELDS->@*;
 };
 
 # skip create folder
 
 ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 is_deeply $actions, {}, 'No action';
@@ -169,7 +169,7 @@ is $db->task_ignored($task, $item), $db, 'Log entry';
 # create package
 
 ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -189,7 +189,7 @@ push $log_entries{success}->@*, $log_entry->($item, 'create');
 # update first file
 
 ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -204,7 +204,7 @@ push $log_entries{success}->@*, $log_entry->($item, 'update');
 # rename file
 
 ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -225,7 +225,7 @@ push $log_entries{success}->@*, $log_entry->($item, 'update');
 # move file
 
 ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -246,7 +246,7 @@ push $log_entries{success}->@*, $log_entry->($item, 'move');
 # rename first folder
 
 ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -267,7 +267,7 @@ push $log_entries{success}->@*, $log_entry->($item, 'move');
 # move file again
 
 ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -288,7 +288,7 @@ push $log_entries{success}->@*, $log_entry->($item, 'move');
 # delete file
 
 ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -305,7 +305,7 @@ push $log_entries{success}->@*, $log_entry->($item, 'delete');
 # remote folder
 
 ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 

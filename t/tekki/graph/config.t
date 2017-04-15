@@ -9,7 +9,7 @@ use Mojo::File;
 my $package;
 
 BEGIN {
-  $package = 'Tekki::Onedrive::Config';
+  $package = 'Tekki::Graph::Config';
   use_ok $package or exit;
 }
 

@@ -1,4 +1,4 @@
-package Tekki::Onedrive::Database;
+package Tekki::Graph::Database;
 use Mojo::Base -base;
 use feature 'signatures';
 no warnings 'experimental::signatures';
@@ -241,7 +241,7 @@ sub _delete_recursive ($self, $db, $item_id) {
 
 =head1 NAME
 
-Tekki::Onedrive::Database - Stores the details of a destination in SQLite.
+Tekki::Graph::Database - Stores the details of a destination in SQLite.
 
 =head1 COPYRIGHT AND LICENSE
 

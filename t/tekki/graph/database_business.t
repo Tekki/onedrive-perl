@@ -5,8 +5,8 @@ use Test::More tests => 37;
 use Mojo::File;
 use Mojo::JSON 'decode_json';
 
-use Tekki::Onedrive::Database;
-use Tekki::Onedrive::Item;
+use Tekki::Graph::Database;
+use Tekki::Graph::Item;
 
 # test values
 
@@ -16,7 +16,7 @@ my %testitem
 # test db
 
 ok my $tempdir = Mojo::File::tempdir, 'Create temp folder';
-ok my $db = Tekki::Onedrive::Database->new($tempdir), 'Create db object';
+ok my $db = Tekki::Graph::Database->new($tempdir), 'Create db object';
 
 # add tasks
 
@@ -30,7 +30,7 @@ is $db->add_tasks(\@tasks), $counter, "$counter tasks added";
 # root
 
 ok my $task = $db->next_task, 'Get root item';
-ok my $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok my $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok my $actions = $db->find_differences($item), 'Find differences';
 
@@ -60,7 +60,7 @@ my @folders = (
 subtest 'Create folders' => sub {
   for my $folder (@folders) {
     ok $task = $db->next_task, 'Get next task';
-    ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+    ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
     ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -91,7 +91,7 @@ my @files = (
 subtest 'Create files' => sub {
   for my $file (@files) {
     ok $task = $db->next_task, 'Get next task';
-    ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+    ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
     ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -108,7 +108,7 @@ subtest 'Create files' => sub {
 # move first file
 
 ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -128,7 +128,7 @@ is $db->task_succeeded($task, $item, 'move'), $db, 'Log entry';
 # delete first file
 
 ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -142,7 +142,7 @@ is $db->task_succeeded($task, $item, 'delete'), $db, 'Log entry';
 # delete first folder
 
 ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
@@ -161,7 +161,7 @@ is $itemcount->[0], 1, 'Only root item remains';
 # try to delete second folder
 
 ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Onedrive::Item->new($task->{description}), 'Extract item';
+ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 

@@ -6,7 +6,7 @@ use lib "$FindBin::Bin/../lib";
 use Mojo::Base -strict;
 use Mojo::Util qw|extract_usage getopt|;
 
-use Tekki::Onedrive::Connector;
+use Tekki::Graph::Connector;
 
 getopt
   'a|auth'    => \my $auth,
@@ -22,7 +22,7 @@ die 'Destination missing!' unless @ARGV;
 
 for my $destination (@ARGV) {
 
-  my $conn = Tekki::Onedrive::Connector->new($destination);
+  my $conn = Tekki::Graph::Connector->new($destination);
   $conn->debug(1)   if $debug;
   $conn->verbose(1) if $verbose;
 
@@ -48,7 +48,7 @@ for my $destination (@ARGV) {
 
 =head1 NAME
 
-onedrive.pl - Perl client for OneDrive.
+onedrive.pl - Perl client for Microsoft Graph services.
 
 =head1 SYNOPSIS
 

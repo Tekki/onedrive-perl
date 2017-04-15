@@ -1,4 +1,4 @@
-package Tekki::Onedrive::Connector;
+package Tekki::Graph::Connector;
 
 use Mojo::Base -base;
 use feature 'signatures';
@@ -14,9 +14,9 @@ use Mojo::URL;
 use Mojo::UserAgent;
 use Mojo::Util qw|decode encode|;
 
-use Tekki::Onedrive::Config;
-use Tekki::Onedrive::Database;
-use Tekki::Onedrive::Item;
+use Tekki::Graph::Config;
+use Tekki::Graph::Database;
+use Tekki::Graph::Item;
 
 # constants
 
@@ -50,7 +50,7 @@ sub authenticate ($self) {
   $path->child($_)->make_path for qw|config documents|;
 
   # config
-  my $config = Tekki::Onedrive::Config->new($path);
+  my $config = Tekki::Graph::Config->new($path);
 
   # get authorization code
   my $url = Mojo::URL->new(AUTH_URL)->query(
@@ -154,7 +154,7 @@ sub authenticate ($self) {
 }
 
 sub logout ($self) {
-  my $config = Tekki::Onedrive::Config->new($self->destination);
+  my $config = Tekki::Graph::Config->new($self->destination);
   $config->$_('') for qw|access_token refresh_token scope validto|;
   $config->save;
 
@@ -162,12 +162,12 @@ sub logout ($self) {
 }
 
 sub synchronize ($self) {
-  my $config = Tekki::Onedrive::Config->new($self->destination);
+  my $config = Tekki::Graph::Config->new($self->destination);
   die 'Not authenticated' unless $config->refresh_token;
 
   say encode 'UTF-8', $config->description if $self->verbose;
 
-  my $db = Tekki::Onedrive::Database->new($self->destination);
+  my $db = Tekki::Graph::Database->new($self->destination);
 
   chdir $self->destination . '/documents';
 
@@ -177,7 +177,7 @@ sub synchronize ($self) {
 
     # check for existing tasks
     while (my $task = $db->next_task) {
-      my $item = Tekki::Onedrive::Item->new($task->{description});
+      my $item = Tekki::Graph::Item->new($task->{description});
 
       say encode 'UTF-8', "$task->{id}: " . $item->name if $self->verbose;
 
@@ -303,7 +303,7 @@ sub synchronize ($self) {
 }
 
 sub test ($self) {
-  my $config = Tekki::Onedrive::Config->new($self->destination);
+  my $config = Tekki::Graph::Config->new($self->destination);
 
   while (1) {
     print "\nURL: ";
@@ -422,7 +422,7 @@ sub _get_token ($self, $config) {
 
 =head1 NAME
 
-Tekki::Onedrive::Connector - The connector itself.
+Tekki::Graph::Connector - The connector itself.
 
 =head1 COPYRIGHT AND LICENSE
 

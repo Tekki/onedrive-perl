@@ -7,14 +7,14 @@ use Test::More tests => 5;
 use Mojo::File;
 use Mojo::JSON 'decode_json';
 
-use Tekki::Onedrive::Item;
+use Tekki::Graph::Item;
 
 # package
 
 my $package;
 
 BEGIN {
-  $package = 'Tekki::Onedrive::Database';
+  $package = 'Tekki::Graph::Database';
   use_ok $package or exit;
 }
 
