@@ -1,6 +1,6 @@
 # OneDrive-Perl
 
-A Perl client for Microsoft Graph services like OneDrive Personal or OneDrive for Business.
+A Perl client for Office 365 services like OneDrive Personal or OneDrive for Business.
 
 **Warning: As long as you see this message, the code in this repo is still experimental. Don't be surprised if you download incompatible changes with git pull.**
 (If you run into incompatibilities, reset your connection. Delete all files in `destination/config`, reathenticate and synchronize again.)
@@ -18,7 +18,7 @@ A Perl client for Microsoft Graph services like OneDrive Personal or OneDrive fo
 
 ## Features
 
-OneDrive-Perl is a backup client for Microsoft Graph services like OneDrive Personal or OneDrive for Business, i.e. a program that mirrors all the changes on your cloud service to a local machine, using the [Graph API](https://developer.microsoft.com/en-us/graph/) and obviously written in [Perl](https://www.perl.org). It is allowed to crash, but not to lose a single operation. It doesn't perform a two-way synchronization (and probably will never do).
+OneDrive-Perl is a backup client for Office 365 services like OneDrive Personal or OneDrive for Business, i.e. a program that mirrors all the changes on your cloud service to a local machine, using the [Graph API](https://developer.microsoft.com/en-us/graph/) and obviously written in [Perl](https://www.perl.org). It is allowed to crash, but not to lose a single operation. It doesn't perform a two-way synchronization (and probably will never do).
 
 The next steps are:
   * ~~support for remote items (files and folders shared with me)~~
@@ -37,10 +37,11 @@ Next you need the most recent versions of the following Perl modules:
   * Data::Dump
   * Mojolicious
   * Mojo::SQLite
+  * Text::CSV_XS
 
 Don't use the outdated packages included in your distribution, instead install them from CPAN with
 
-    cpanm Data::Dump Mojolicious Mojo::SQLite
+    cpanm Data::Dump Mojolicious Mojo::SQLite Text::CSV_XS
 
 Now you can install OneDrive-Perl.
 
@@ -71,11 +72,12 @@ It has the following subdirectories:
 
     destination
     |-- config
+    |-- contacts
     |-- documents
 
-`config` is used to store internal data, `documents` is the place where the files from OneDrive will be found.
+`config` is used to store internal data, `contacts` to backup the contacts, and `documents` is the place where the files from OneDrive will be downloaded.
 
-If the destination doesn't exist, the complete directory tree is created automatically.
+If the destination doesn't exist, the directory tree is created as necessary.
 
 ### Authenticate
 
@@ -86,7 +88,7 @@ This will display a link like
 
     https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=...
 
-that you have to open in your browser. Log in with your Microsoft account and allow the application to access your OneDrive. You will be redirected to a blank page on microsoftonline.com. Copy the resulting URL from your browser back to
+that you have to open in your browser. Log in with your Microsoft account and allow the application to access your Office 365 instance. You will be redirected to a blank page on microsoftonline.com. Copy the resulting URL from your browser back to
 
     Paste the response URL:
 

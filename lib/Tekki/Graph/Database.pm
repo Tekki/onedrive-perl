@@ -181,17 +181,6 @@ sub task_failed ($self, $task, $item, $action) {
 sub task_ignored ($self, $task, $item) {
   my $db = $self->handle;
 
-#  $db->insert(
-#    'log',
-#    {
-#      timestamp    => Mojo::Date->new->to_datetime,
-#      item_id      => $item->id,
-#      name         => $item->name,
-#      lastmodified => $item->lastmodified,
-#      modifiedby   => $item->modifiedby,
-#      result       => 'ignored',
-#    }
-#  );
   $db->delete('task', {id => $task->{id}});
   return $self;
 }

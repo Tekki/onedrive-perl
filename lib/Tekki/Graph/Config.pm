@@ -12,7 +12,7 @@ use Mojo::Util qw|decode encode|;
 
 use constant {
   CONFIG_VARS => [
-    qw|access_token description drive_id drive_type drive_url
+    qw|access_token contact_url description drive_id drive_type drive_url
       item_id owner refresh_token remote scope validto
       next_link delta_link|
   ],
@@ -40,7 +40,7 @@ sub new ($class, $destination) {
 # methods
 
 has [
-  qw|access_token configfile description drive_id drive_type drive_url
+  qw|access_token configfile contact_url description drive_id drive_type drive_url
     item_id owner refresh_token remote scope validto|
 ];
 

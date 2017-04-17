@@ -4,7 +4,7 @@ use Mojo::Base -base;
 use feature 'signatures';
 no warnings 'experimental::signatures';
 
-our $VERSION = '0.82';
+our $VERSION = '0.83';
 
 use Data::Dump 'pp';
 use Digest::SHA 'sha1_hex';
@@ -15,7 +15,9 @@ use Mojo::UserAgent;
 use Mojo::Util qw|decode encode|;
 
 use Tekki::Graph::Config;
+use Tekki::Graph::ContactDownloader;
 use Tekki::Graph::Database;
+use Tekki::Graph::DriveDownloader;
 use Tekki::Graph::Item;
 
 # constants
@@ -47,7 +49,7 @@ sub authenticate ($self) {
 
   # check destination
   my $path = path($self->destination)->make_path;
-  $path->child($_)->make_path for qw|config documents|;
+  $path->child('config')->make_path;
 
   # config
   my $config = Tekki::Graph::Config->new($path);
@@ -55,7 +57,7 @@ sub authenticate ($self) {
   # get authorization code
   my $url = Mojo::URL->new(AUTH_URL)->query(
     client_id     => CLIENT_ID,
-    scope         => "user.read files.read files.read.all offline_access",
+    scope         => 'calendars.read contacts.read files.read files.read.all user.read offline_access',
     response_type => 'code',
     redirect_uri  => REDIRECT_URI,
   );
@@ -78,7 +80,7 @@ sub authenticate ($self) {
   my $tx = $ua->post(TOKEN_URL, form => \%form);
   die $self->_error($tx) if $tx->error;
   my $response = $tx->success->json;
-  say 'Authentication successful.' if $self->verbose;
+  $self->info('Authentication successful.');
 
   # update config
   $config->$_($response->{$_}) for qw|scope access_token refresh_token|;
@@ -96,7 +98,7 @@ sub authenticate ($self) {
     die $self->_error($tx) if $tx->error;
     my $own        = $tx->success->json;
     my $drive_type = $own->{driveType};
-    $own->{description} = "$own->{owner}->{user}->{displayName} / OneDrive "
+    $own->{description} = "$own->{owner}->{user}->{displayName} / Office 365 "
       . ucfirst $drive_type;
     push @drives, $own;
 
@@ -140,6 +142,7 @@ sub authenticate ($self) {
     } else {
 
       # my own drive
+      $config->contact_url(GRAPH_URL . '/me/contacts');
       $config->drive_id($drive->{id});
       $config->drive_url(GRAPH_URL . '/me/drive');
       $config->owner($drive->{owner}->{user}->{displayName});
@@ -148,13 +151,43 @@ sub authenticate ($self) {
 
   }
   $config->save;
-  say 'Config written.' if $self->verbose;
+  $self->info('Config written.');
 
   return $self;
 }
 
+sub chdir ($self, $path) {
+  my $new_path = path($self->destination, $path)->make_path;
+  chdir $new_path;
+  return $new_path;
+}
+
+sub config ($self) {
+  $self->{config} ||= Tekki::Graph::Config->new($self->destination);
+  return $self->{config};
+}
+
+sub db ($self) {
+  $self->{db} ||= Tekki::Graph::Database->new($self->destination);
+  return $self->{db};
+}
+
+sub get_authorized ($self, $url) {
+  my $token = $self->_get_token;
+  my $ua    = Mojo::UserAgent->new;
+  my $tx    = $ua->get($url, {Authorization => "Bearer $token"});
+  die $self->_error($tx) if $tx->error;
+
+  return $tx->success;
+}
+
+sub info ($self, $message) {
+  say encode 'UTF-8', $message if $self->verbose;
+  return $self;
+}
+
 sub logout ($self) {
-  my $config = Tekki::Graph::Config->new($self->destination);
+  my $config = $self->config;
   $config->$_('') for qw|access_token refresh_token scope validto|;
   $config->save;
 
@@ -162,144 +195,17 @@ sub logout ($self) {
 }
 
 sub synchronize ($self) {
-  my $config = Tekki::Graph::Config->new($self->destination);
+  my $config = $self->config;
   die 'Not authenticated' unless $config->refresh_token;
 
-  say encode 'UTF-8', $config->description if $self->verbose;
+  $self->info($config->description);
 
-  my $db = Tekki::Graph::Database->new($self->destination);
+  Tekki::Graph::ContactDownloader->new($self)->synchronize
+    if $config->contact_url;
+  Tekki::Graph::DriveDownloader->new($self)->synchronize
+    if $config->drive_url;
 
-  chdir $self->destination . '/documents';
-
-  my $continue      = 1;
-  my $download_more = 1;
-  while ($continue) {
-
-    # check for existing tasks
-    while (my $task = $db->next_task) {
-      my $item = Tekki::Graph::Item->new($task->{description});
-
-      say encode 'UTF-8', "$task->{id}: " . $item->name if $self->verbose;
-
-      my $actions = $db->find_differences($item);
-      unless (keys $actions->%*) {
-
-        # ignore task without action
-        $db->task_ignored($task, $item);
-        say '  ignored' if $self->verbose;
-        next;
-      }
-
-      # create new item
-      if (my $create = $actions->{create}) {
-        unless ($item->root) {
-          if ($item->{file}) {
-
-            # download content
-            $self->_download_content($item, $create->{full_path}, $config);
-
-          } elsif ($item->{folder} || $item->{package}) {
-
-            # create folder
-            $create->{full_path}->make_path;
-            say '  folder created' if $self->verbose;
-
-          } else {
-
-            # unknown type
-            die "Unknown file type in task $task->{id}";
-          }
-
-          # change modification time
-          $item->update_mtime;
-        }
-        $db->create_item($item);
-        $db->task_succeeded($task, $item, 'create');
-        say '  db updated' if $self->verbose;
-      }
-
-      # move or rename
-      if (my $move = $actions->{move}) {
-        unless ($item->{root}) {
-
-          # move local file
-          $move->{old_path}->move_to($move->{new_path});
-          say encode 'UTF-8', "  moved to $move->{new_path}" if $self->verbose;
-
-          # change modification time
-          $item->update_mtime;
-
-        }
-        $db->update_item($item);
-        $db->task_succeeded($task, $item, 'move');
-        say '  db updated' if $self->verbose;
-      }
-
-      # update
-      if (my $update = $actions->{update}) {
-        $self->_download_content($item, $update->{full_path}, $config);
-        $item->update_mtime;
-
-        $db->update_item($item);
-        $db->task_succeeded($task, $item, 'update');
-        say '  db updated' if $self->verbose;
-      }
-
-      # update db
-      if ($actions->{update_db}) {
-        $db->update_item($item);
-
-        $db->task_ignored($task, $item);
-        say '  db updated' if $self->verbose;
-      }
-
-      # delete
-      if (my $delete = $actions->{delete}) {
-        $delete->{full_path}->remove_tree;
-        say '  deleted' if $self->verbose;
-
-        $db->delete_item($item);
-        $db->task_succeeded($task, $item, 'delete');
-        say '  db updated' if $self->verbose;
-      }
-
-    }
-    $continue = 0;
-
-    # download new instructions
-    if ($download_more) {
-      my $delta_url = $config->next_link || $config->delta_link;
-      my $token     = $self->_get_token($config);
-      my $ua        = Mojo::UserAgent->new;
-      my $tx        = $ua->get($delta_url, {Authorization => "Bearer $token"});
-      die $self->_error($tx) if $tx->error;
-
-      my $response = $tx->success->json;
-
-      # update next or delta link
-      if ($response->{'@odata.nextLink'}) {
-        $config->next_link($response->{'@odata.nextLink'});
-      } else {
-        $config->delta_link($response->{'@odata.deltaLink'});
-        $download_more = 0;
-      }
-
-      # debug
-      if ($self->debug) {
-        my $path     = path("$ENV{HOME}/temp")->make_path;
-        my $filename = $config->description . '_delta_';
-        $filename =~ s/\W+/_/g;
-        my $i = 1;
-        $i++ while -f $path->child("$filename$i.txt");
-        $path->child("$filename$i.txt")->spurt($tx->success->body);
-      }
-
-      # add to db
-      my $counter = $db->add_tasks($response->{value});
-      say "\n$counter new tasks downloaded\n" if $self->verbose;
-      $continue = $counter ? 1 : 0;
-    }
-  }
+  return $self;
 }
 
 sub test ($self) {
@@ -332,50 +238,11 @@ sub test ($self) {
       $path->child("$filename$i.txt")->spurt($tx->success->body);
     }
   }
+
+  return $self;
 }
 
 # internal methods
-
-sub _download_content ($self, $item, $path, $config) {
-  if ($item->exists_identical) {
-    say '  download skipped' if $self->verbose;
-    return;
-  }
-
-
-  # update metadata
-  my $ua    = Mojo::UserAgent->new;
-  my $token = $self->_get_token($config);
-
-  my $url = $config->drive_url . "/items/$item->{id}";
-  my $tx = $ua->get($url, {Authorization => "Bearer $token"});
-  die $self->_error($tx) if $tx->error;
-
-  my $json   = $tx->success->json;
-  my $hashes = $json->{file}->{hashes};
-  $item->sha1(lc $hashes->{sha1Hash}) if $hashes->{sha1Hash};
-
-  # download
-  $url = $json->{'@microsoft.graph.downloadUrl'};
-  $tx = $ua->get($url, {Authorization => "Bearer $token"});
-  die $self->_error($tx) if $tx->error;
-
-# size is unreliable!
-#  my $asset_size = $tx->success->content->asset->size;
-#  die "Size of $item->{name} is $asset_size instead of $item->{size}!"
-#    if $asset_size != $item->size;
-
-  $tx->success->content->asset->move_to($path);
-
-  if ($config->drive_type eq 'personal') {
-
-    # not yet working on business
-    die encode 'UTF-8', "Download of $item->{name} failed!"
-      unless $item->exists_identical;
-  }
-
-  say '  content downloaded' if $self->verbose;
-}
 
 sub _error ($self, $tx) {
   my $err = $tx->error;
@@ -395,7 +262,8 @@ sub _error ($self, $tx) {
   return $message;
 }
 
-sub _get_token ($self, $config) {
+sub _get_token ($self) {
+  my $config = $self->config;
   if ($config->expires_in < 60) {
 
     my $ua   = Mojo::UserAgent->new;
