@@ -4,7 +4,7 @@ use Mojo::Base -base;
 use feature 'signatures';
 no warnings 'experimental::signatures';
 
-our $VERSION = '0.83';
+our $VERSION = '0.84';
 
 use Data::Dump 'pp';
 use Digest::SHA 'sha1_hex';
@@ -14,6 +14,7 @@ use Mojo::URL;
 use Mojo::UserAgent;
 use Mojo::Util qw|decode encode|;
 
+use Tekki::Graph::CalendarDownloader;
 use Tekki::Graph::Config;
 use Tekki::Graph::ContactDownloader;
 use Tekki::Graph::Database;
@@ -56,8 +57,9 @@ sub authenticate ($self) {
 
   # get authorization code
   my $url = Mojo::URL->new(AUTH_URL)->query(
-    client_id     => CLIENT_ID,
-    scope         => 'calendars.read contacts.read files.read files.read.all user.read offline_access',
+    client_id => CLIENT_ID,
+    scope =>
+      'calendars.read contacts.read files.read files.read.all user.read offline_access',
     response_type => 'code',
     redirect_uri  => REDIRECT_URI,
   );
@@ -142,10 +144,10 @@ sub authenticate ($self) {
     } else {
 
       # my own drive
-      $config->contact_url(GRAPH_URL . '/me/contacts');
-      $config->drive_id($drive->{id});
-      $config->drive_url(GRAPH_URL . '/me/drive');
-      $config->owner($drive->{owner}->{user}->{displayName});
+      $config->calendar_url(GRAPH_URL . '/me/calendars')
+        ->contact_url(GRAPH_URL . '/me/contacts')->drive_id($drive->{id})
+        ->drive_url(GRAPH_URL . '/me/drive')
+        ->owner($drive->{owner}->{user}->{displayName});
 
     }
 
@@ -194,16 +196,21 @@ sub logout ($self) {
   return $self;
 }
 
-sub synchronize ($self) {
+sub synchronize ($self, $params = {}) {
   my $config = $self->config;
   die 'Not authenticated' unless $config->refresh_token;
 
   $self->info($config->description);
 
+  Tekki::Graph::CalendarDownloader->new($self)->synchronize
+    if $config->calendar_url
+    && !($params->{contacts_only} || $params->{documents_only});
   Tekki::Graph::ContactDownloader->new($self)->synchronize
-    if $config->contact_url;
+    if $config->contact_url
+    && !($params->{calendars_only} || $params->{documents_only});
   Tekki::Graph::DriveDownloader->new($self)->synchronize
-    if $config->drive_url;
+    if $config->drive_url
+    && !($params->{calendars_only} || $params->{contacts_only});
 
   return $self;
 }
@@ -221,7 +228,7 @@ sub test ($self) {
     $url =~ s/<%(.*?)%>/$config->$1/ge;
     say "$url\n";
     my $ua    = Mojo::UserAgent->new;
-    my $token = $self->_get_token($config);
+    my $token = $self->_get_token;
     my $tx    = $ua->get($url, {Authorization => "Bearer $token"});
     if ($tx->error) {
       warn $self->_error($tx);

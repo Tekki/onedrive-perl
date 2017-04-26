@@ -11,7 +11,7 @@ A Perl client for Office 365 services like OneDrive Personal or OneDrive for Bus
     onedrive.pl -a [-v] /path/to/destination
 
     # synchronize
-    onedrive.pl -s [-v] /path/to/destination
+    onedrive.pl -s [-v] [-C|-D|-K] /path/to/destination
 
     # logout
     onedrive.pl -x /path/to/destination
@@ -24,7 +24,6 @@ The next steps are:
   * ~~support for remote items (files and folders shared with me)~~
   * ~~support for OneDrive for Business~~
   * support for SharePoint (waiting for Microsoft to improve the API)
-  * possibility to upload a big amount of data to OneDrive and SharePoint
 
 ## Installation
 
@@ -35,13 +34,14 @@ OneDrive-Perl needs Perl 5.24.0 or highter. It is recommended to use a [Perlbrew
 
 Next you need the most recent versions of the following Perl modules:
   * Data::Dump
+  * Data::ICal
   * Mojolicious
   * Mojo::SQLite
   * Text::CSV_XS
 
 Don't use the outdated packages included in your distribution, instead install them from CPAN with
 
-    cpanm Data::Dump Mojolicious Mojo::SQLite Text::CSV_XS
+    cpanm Data::Dump Data::ICal Mojolicious Mojo::SQLite Text::CSV_XS
 
 Now you can install OneDrive-Perl.
 
@@ -71,11 +71,13 @@ You can call it on multiple destinations
 It has the following subdirectories:
 
     destination
+    |-- calendars
     |-- config
     |-- contacts
     |-- documents
 
-`config` is used to store internal data, `contacts` to backup the contacts, and `documents` is the place where the files from OneDrive will be downloaded.
+`config` is used to store internal data, `contacts` to backup the contacts, and `documents` is the place where the files from OneDrive will be downloaded. The
+calendar events are copied to subfolders of `calendars`.
 
 If the destination doesn't exist, the directory tree is created as necessary.
 
@@ -97,7 +99,7 @@ and press ENTER. If the authentication is successful, you can choose which drive
     1: Tekki / OneDrive Personal
     2: Bonnie Parker / Shared with Tekki
     Select drive [1]:
-    Description [Tekki / OneDrive Personal]:
+    Description [Tekki / Office 365 Personal]:
 
 If you want to keep the proposed values, simply press ENTER.
 
@@ -110,6 +112,17 @@ This will synchronize your OneDrive with the destination and (hopefully) exit wi
 
     onedrive.pl -s -v destination[s]
     onedrive.pl --synchronize --verbose destination[s]
+
+You can limit the synchronization to a specified area with
+
+    onedrive-pl -s -C destination[s]
+    onedrive-pl --synchronize --calendars-only destination[s]
+
+    onedrive-pl -s -D destination[s]
+    onedrive-pl --synchronize --documents-only destination[s]
+
+    onedrive-pl -s -K destination[s]
+    onedrive-pl --synchronize --contacts-only destination[s]
 
 ***Crashes:*** At this moment, the program will crash maybe once an hour, especially if errors and timeouts on the side of Microsoft occur. As it develops, these crashes will be less frequent. ***But*** even now you should be able to restart it without creating a single inconsistency.
 

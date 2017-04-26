@@ -19,7 +19,6 @@ sub new ($class, $connector) {
 sub synchronize ($self) {
   my $connector = $self->{connector};
   my $config    = $connector->config;
-  my $db        = $connector->db;
 
   path($connector->destination, 'contacts')->remove_tree({keep_root => 1});
   my $path = $connector->chdir('contacts');

@@ -1,6 +1,6 @@
 use Mojo::Base -strict;
 
-use Test::More tests => 41;
+use Test::More tests => 42;
 use open qw|:std :utf8|;
 
 use Mojo::Date;
@@ -21,8 +21,8 @@ isa_ok $package, $parent;
 # constants
 
 my @config_vars
-  = qw|access_token contact_url description drive_id drive_type drive_url
-  item_id owner refresh_token remote scope validto next_link delta_link|;
+  = qw|access_token calendar_url contact_url description drive_id drive_type
+  drive_url item_id owner refresh_token remote scope validto next_link delta_link|;
 
 is_deeply $package->CONFIG_VARS, [@config_vars], 'Config vars';
 
@@ -37,6 +37,7 @@ ok my $config = $package->new($tempdir), 'Create empty config';
 
 my %sample_config = (
   access_token  => 'Access token',
+  calendar_url  => 'Calendar URL',
   contact_url   => 'Contact URL',
   delta_link    => 'A delta link',
   description   => 'Description with äöüóúőí',

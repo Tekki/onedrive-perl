@@ -12,8 +12,8 @@ use Mojo::Util qw|decode encode|;
 
 use constant {
   CONFIG_VARS => [
-    qw|access_token contact_url description drive_id drive_type drive_url
-      item_id owner refresh_token remote scope validto
+    qw|access_token calendar_url contact_url description drive_id drive_type
+      drive_url item_id owner refresh_token remote scope validto
       next_link delta_link|
   ],
 };
@@ -40,8 +40,8 @@ sub new ($class, $destination) {
 # methods
 
 has [
-  qw|access_token configfile contact_url description drive_id drive_type drive_url
-    item_id owner refresh_token remote scope validto|
+  qw|access_token calendar_url configfile contact_url description drive_id
+    drive_type drive_url item_id owner refresh_token remote scope validto|
 ];
 
 sub delta_link ($self, $newvalue = undef) {
@@ -84,10 +84,8 @@ sub next_link ($self, $newvalue = undef) {
 }
 
 sub save ($self) {
-  $self->configfile->spurt(
-    encode 'UTF-8', join "\n",
-    map { "$_=" . ($self->$_ || '') } CONFIG_VARS->@*
-  );
+  $self->configfile->spurt(encode 'UTF-8',
+    join "\n", map { "$_=" . ($self->$_ || '') } CONFIG_VARS->@*);
   return $self;
 }
 
