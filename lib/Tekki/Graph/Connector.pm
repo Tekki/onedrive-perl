@@ -50,7 +50,6 @@ sub authenticate ($self) {
 
   # check destination
   my $path = path($self->destination)->make_path;
-  $path->child('config')->make_path;
 
   # config
   my $config = Tekki::Graph::Config->new($path);

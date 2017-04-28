@@ -24,7 +24,7 @@ sub new ($class, $destination) {
   my $self = {};
   bless $self, $class;
 
-  my $config_path = path($destination, 'config')->make_path;
+  my $config_path = path($destination, '.config')->make_path;
   my $configfile = $config_path->child('onedrive.conf');
   $self->configfile($configfile);
 

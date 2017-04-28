@@ -22,7 +22,7 @@ use constant {
 sub new ($class, $destination) {
   my $self = bless {}, $class;
 
-  my $config_path = path($destination, 'config')->make_path;
+  my $config_path = path($destination, '.config')->make_path;
   my $db = Mojo::SQLite->new("$config_path/onedrive.db");
   $db->migrations->from_file(
     path(__FILE__)->dirname . '/../../../migrations/onedrive.sql')->migrate;

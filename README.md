@@ -3,7 +3,7 @@
 A Perl client for Office 365 services like OneDrive Personal or OneDrive for Business.
 
 **Warning: As long as you see this message, the code in this repo is still experimental. Don't be surprised if you download incompatible changes with git pull.**
-(If you run into incompatibilities, reset your connection. Delete all files in `destination/config`, reathenticate and synchronize again.)
+(If you run into incompatibilities, reset your connection. Delete all files in `destination/.config`, reathenticate and synchronize again.)
 
 ## Synopsis
 
@@ -71,12 +71,12 @@ You can call it on multiple destinations
 It has the following subdirectories:
 
     destination
+    |-- .config
     |-- calendars
-    |-- config
     |-- contacts
     |-- documents
 
-`config` is used to store internal data, `contacts` to backup the contacts, and `documents` is the place where the files from OneDrive will be downloaded. The
+`.config` is used to store internal data, `contacts` to backup the contacts, and `documents` is the place where the files from OneDrive will be downloaded. The
 calendar events are copied to subfolders of `calendars`.
 
 If the destination doesn't exist, the directory tree is created as necessary.
