@@ -8,7 +8,6 @@ our $VERSION = '0.84';
 
 use Data::Dump 'pp';
 use Digest::SHA 'sha1_hex';
-use Config::Tiny;
 use Mojo::File 'path';
 use Mojo::URL;
 use Mojo::UserAgent;
