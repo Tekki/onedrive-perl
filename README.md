@@ -35,13 +35,16 @@ OneDrive-Perl needs Perl 5.24.0 or highter. It is recommended to use a [Perlbrew
 Next you need the most recent versions of the following Perl modules:
   * Data::Dump
   * Data::ICal
+  * IO::Socket::SSL
   * Mojolicious
   * Mojo::SQLite
   * Text::CSV_XS
 
 Don't use the outdated packages included in your distribution, instead install them from CPAN with
 
-    cpanm Data::Dump Data::ICal Mojolicious Mojo::SQLite Text::CSV_XS
+    cpanm Data::Dump Data::ICal IO::Socket::SSL Mojolicious Mojo::SQLite Text::CSV_XS
+
+IO::Socket::SSL depends on the SSL development libraries. On Debian they are called `libssl-dev`.
 
 Now you can install OneDrive-Perl.
 

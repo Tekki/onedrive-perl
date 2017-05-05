@@ -26,7 +26,7 @@ sub new ($class, $destination) {
 
   my $config_path = path($destination, '.config')->make_path;
   my $configfile = $config_path->child('onedrive.conf');
-  $self->configfile($configfile);
+  $self->{configfile} = $configfile;
 
   if (-f $configfile) {
     my %config = map { split /=/, $_, 2 } split /\r?\n/,
@@ -40,7 +40,7 @@ sub new ($class, $destination) {
 # methods
 
 has [
-  qw|access_token calendar_url configfile contact_url description drive_id
+  qw|access_token calendar_url contact_url description drive_id
     drive_type drive_url item_id owner refresh_token remote scope validto|
 ];
 
@@ -84,7 +84,7 @@ sub next_link ($self, $newvalue = undef) {
 }
 
 sub save ($self) {
-  $self->configfile->spurt(encode 'UTF-8',
+  $self->{configfile}->spurt(encode 'UTF-8',
     join "\n", map { "$_=" . ($self->$_ || '') } CONFIG_VARS->@*);
   return $self;
 }

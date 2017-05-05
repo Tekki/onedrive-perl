@@ -1,6 +1,6 @@
 use Mojo::Base -strict;
 
-use Test::More tests => 42;
+use Test::More tests => 41;
 use open qw|:std :utf8|;
 
 use Mojo::Date;
@@ -28,7 +28,7 @@ is_deeply $package->CONFIG_VARS, [@config_vars], 'Config vars';
 
 # methods
 
-can_ok $package, $_ for @config_vars, qw|configfile expires_in save|;
+can_ok $package, $_ for @config_vars, qw|expires_in save|;
 
 # test config
 

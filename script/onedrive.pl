@@ -29,17 +29,11 @@ for my $destination (@ARGV) {
   $conn->debug(1)   if $debug;
   $conn->verbose(1) if $verbose;
 
-  if ($logout) {
-    $conn->logout;
-  }
+  $conn->logout if $logout;
 
-  if ($auth) {
-    $conn->authenticate;
-  }
+  $conn->authenticate if $auth;
 
-  if ($test) {
-    $conn->test;
-  }
+  $conn->test if $test;
 
   if ($sync) {
     $conn->synchronize(
