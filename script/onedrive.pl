@@ -26,8 +26,9 @@ die 'Destination missing!' unless @ARGV;
 for my $destination (@ARGV) {
 
   my $conn = Tekki::Graph::Connector->new($destination);
-  $conn->debug(1)   if $debug;
-  $conn->verbose(1) if $verbose;
+  $conn->debug(1) if $debug;
+  $conn->verbose(sub { say Mojo::Util::encode 'UTF-8', $_[0] })
+    if $verbose;
 
   $conn->logout if $logout;
 

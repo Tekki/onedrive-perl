@@ -182,7 +182,7 @@ sub get_authorized ($self, $url) {
 }
 
 sub info ($self, $message) {
-  say encode 'UTF-8', $message if $self->verbose;
+  $self->verbose->($message) if $self->verbose;
   return $self;
 }
 
