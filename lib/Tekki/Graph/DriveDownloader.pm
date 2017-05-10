@@ -127,9 +127,9 @@ sub synchronize ($self) {
 
       # update next or delta link
       if ($json->{'@odata.nextLink'}) {
-        $config->next_link($json->{'@odata.nextLink'});
+        $config->next_link($json->{'@odata.nextLink'})->save;
       } else {
-        $config->delta_link($json->{'@odata.deltaLink'});
+        $config->delta_link($json->{'@odata.deltaLink'})->save;
         $download_more = 0;
       }
 

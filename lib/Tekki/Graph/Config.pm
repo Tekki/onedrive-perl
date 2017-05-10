@@ -11,9 +11,14 @@ use Mojo::Util qw|decode encode|;
 # constants
 
 use constant {
+  CONFIG_FILE => 'onedrive.conf',
   CONFIG_VARS => [
-    qw|access_token calendar_url contact_url description drive_id drive_type
-      drive_url item_id owner refresh_token remote scope validto
+    qw|calendar_url contact_url description drive_id drive_type
+      drive_url item_id owner remote|
+  ],
+  TOKEN_FILE => 'token.conf',
+  TOKEN_VARS => [
+    qw|access_token refresh_token scope validto
       next_link delta_link|
   ],
 };
@@ -25,13 +30,24 @@ sub new ($class, $destination) {
   bless $self, $class;
 
   my $config_path = path($destination, '.config')->make_path;
-  my $configfile = $config_path->child('onedrive.conf');
-  $self->{configfile} = $configfile;
 
+
+  # config file
+  my $configfile = $config_path->child(CONFIG_FILE);
+  $self->{configfile} = $configfile;
   if (-f $configfile) {
     my %config = map { split /=/, $_, 2 } split /\r?\n/,
       decode('UTF-8', $configfile->slurp);
     $self->$_($config{$_} || '') for CONFIG_VARS->@*;
+  }
+
+  # token file
+  my $tokenfile = $config_path->child(TOKEN_FILE);
+  $self->{tokenfile} = $tokenfile;
+  if (-f $tokenfile) {
+    my %config = map { split /=/, $_, 2 } split /\r?\n/,
+      decode('UTF-8', $tokenfile->slurp);
+    $self->$_($config{$_} || '') for TOKEN_VARS->@*;
   }
 
   return $self;
@@ -48,7 +64,7 @@ sub delta_link ($self, $newvalue = undef) {
   if (defined $newvalue) {
     delete $self->{next_link};
     $self->{delta_link} = $newvalue;
-    return $self->save;
+    return $self;
   } else {
     my $rv;
     if ($self->{next_link}) {
@@ -77,15 +93,22 @@ sub next_link ($self, $newvalue = undef) {
   if (defined $newvalue) {
     delete $self->{delta_link};
     $self->{next_link} = $newvalue;
-    return $self->save;
+    return $self;
   } else {
     return $self->{next_link};
   }
 }
 
 sub save ($self) {
-  $self->{configfile}->spurt(encode 'UTF-8',
-    join "\n", map { "$_=" . ($self->$_ || '') } CONFIG_VARS->@*);
+  unless (-f $self->{configfile}) {
+    # don't touch an existing config file
+    $self->{configfile}->spurt(encode 'UTF-8',
+      join "\n", map { "$_=" . ($self->$_ || '') } CONFIG_VARS->@*);
+  }
+
+  $self->{tokenfile}->spurt(encode 'UTF-8',
+    join "\n", map { "$_=" . ($self->$_ || '') } TOKEN_VARS->@*);
+
   return $self;
 }
 

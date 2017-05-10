@@ -1,6 +1,6 @@
 use Mojo::Base -strict;
 
-use Test::More tests => 41;
+use Test::More tests => 44;
 use open qw|:std :utf8|;
 
 use Mojo::Date;
@@ -21,14 +21,19 @@ isa_ok $package, $parent;
 # constants
 
 my @config_vars
-  = qw|access_token calendar_url contact_url description drive_id drive_type
-  drive_url item_id owner refresh_token remote scope validto next_link delta_link|;
+  = qw|calendar_url contact_url description drive_id drive_type
+  drive_url item_id owner remote|;
+my @token_vars
+  = qw|access_token refresh_token scope validto next_link delta_link|;
 
+is $package->CONFIG_FILE, 'onedrive.conf', 'Config file';
 is_deeply $package->CONFIG_VARS, [@config_vars], 'Config vars';
+is $package->TOKEN_FILE, 'token.conf', 'Token file';
+is_deeply $package->TOKEN_VARS, [@token_vars], 'Token vars';
 
 # methods
 
-can_ok $package, $_ for @config_vars, qw|expires_in save|;
+can_ok $package, $_ for @config_vars, @token_vars, qw|expires_in save|;
 
 # test config
 
