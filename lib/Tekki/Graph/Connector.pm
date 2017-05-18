@@ -4,7 +4,7 @@ use Mojo::Base -base;
 use feature 'signatures';
 no warnings 'experimental::signatures';
 
-our $VERSION = '0.85';
+our $VERSION = '0.90';
 
 use Data::Dump 'pp';
 use Digest::SHA 'sha1_hex';
@@ -100,19 +100,60 @@ sub authenticate ($self) {
     my $drive_type = $own->{driveType};
     $own->{description} = "$own->{owner}->{user}->{displayName} / Office 365 "
       . ucfirst $drive_type;
-    push @drives, $own;
 
-    # shared with me
-    $tx = $ua->get(GRAPH_URL . '/me/drive/sharedWithMe',
-      {Authorization => "Bearer $response->{access_token}"});
-    die $self->_error($tx) if $tx->error;
+    # ask for SharePoint URL if on business
+    my $sharepoint;
+    if ($drive_type eq 'business') {
+      say 'To backup a SharePoint drive, enter the main URL of the site.';
+      print 'SharePoint URL []: ';
+      chomp($sharepoint = <STDIN>);
+    }
 
-    for my $shared ($tx->success->json->{value}->@*) {
-      next if $shared->{remoteItem}->{file};
+    if ($sharepoint) {
 
-      $shared->{description}
-        = "$shared->{remoteItem}->{createdBy}->{user}->{displayName} / $shared->{name}";
-      push @drives, $shared;
+      # SharePoint
+
+      my ($company, $site)
+        = $sharepoint
+        =~ m|(\w+\.sharepoint\.com)/?(.*)/SitePages/Homepage.aspx|;
+      die 'Not a SharePoint URL' unless $company;
+      $site = $site ? ":/$site:" : '';
+
+      # name of the site
+      $tx = $ua->get(GRAPH_URL . "/sites/$company$site",
+        {Authorization => "Bearer $response->{access_token}"});
+      die $self->_error($tx) if $tx->error;
+      $company =~ /(.*)\.sharepoint\.com/;
+      my $sitename = ucfirst($1) . ' / ' . $tx->success->json->{displayName};
+
+      # list drives
+      $tx = $ua->get(GRAPH_URL . "/sites/$company$site/drives",
+        {Authorization => "Bearer $response->{access_token}"});
+      die $self->_error($tx) if $tx->error;
+
+      for my $drive ($tx->success->json->{value}->@*) {
+        $drive->{description} = "$sitename $drive->{name}";
+        push @drives, $drive;
+      }
+
+    } else {
+
+      # OneDrive
+
+      push @drives, $own;
+
+      # shared with me
+      $tx = $ua->get(GRAPH_URL . '/me/drive/sharedWithMe',
+        {Authorization => "Bearer $response->{access_token}"});
+      die $self->_error($tx) if $tx->error;
+
+      for my $shared ($tx->success->json->{value}->@*) {
+        next if $shared->{remoteItem}->{file};
+
+        $shared->{description}
+          = "$shared->{remoteItem}->{createdBy}->{user}->{displayName} / $shared->{name}";
+        push @drives, $shared;
+      }
     }
 
     # select drive
@@ -132,12 +173,17 @@ sub authenticate ($self) {
     if (my $remote = $drive->{remoteItem}) {
 
       # shared folder
-      $config->item_id($remote->{id});
-      $config->drive_id($remote->{parentReference}->{driveId});
-      $config->drive_url(
-        GRAPH_URL . "/drives/$remote->{parentReference}->{driveId}");
-      $config->owner($remote->{createdBy}->{user}->{displayName});
-      $config->remote(1);
+      $config->item_id($remote->{id})
+        ->drive_id($remote->{parentReference}->{driveId})
+        ->drive_url(GRAPH_URL . "/drives/$remote->{parentReference}->{driveId}")
+        ->owner($remote->{createdBy}->{user}->{displayName})->remote(1);
+
+    } elsif ($sharepoint) {
+
+      # SharePoint drive
+      $config->drive_id($drive->{id})
+        ->drive_url(GRAPH_URL . "/drives/$drive->{id}")
+        ->owner($drive->{owner}->{user}->{displayName});
 
     } else {
 
@@ -190,6 +236,8 @@ sub logout ($self) {
   my $config = $self->config;
   $config->$_('') for qw|access_token refresh_token scope validto|;
   $config->save;
+
+  $self->info("Logged out from $config->{description}");
 
   return $self;
 }

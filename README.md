@@ -18,12 +18,7 @@ A Perl client for Office 365 services like OneDrive Personal or OneDrive for Bus
 
 ## Features
 
-OneDrive-Perl is a backup client for Office 365 services like OneDrive Personal or OneDrive for Business, i.e. a program that mirrors all the changes on your cloud service to a local machine, using the [Graph API](https://developer.microsoft.com/en-us/graph/) and obviously written in [Perl](https://www.perl.org). It is allowed to crash, but not to lose a single operation. It doesn't perform a two-way synchronization (and probably will never do).
-
-The next steps are:
-  * ~~support for remote items (files and folders shared with me)~~
-  * ~~support for OneDrive for Business~~
-  * support for SharePoint (waiting for Microsoft to improve the API)
+OneDrive-Perl is a backup client for Office 365 services like OneDrive Personal or OneDrive for Business, i.e. a program that mirrors all the changes on your cloud service to a local machine, using the [Graph API](https://developer.microsoft.com/en-us/graph/) and obviously written in [Perl](https://www.perl.org). It is allowed to crash, but not to lose a single operation. It is a backup client, so it has no write permissions and doesn't perform a two-way synchronization.
 
 ## Installation
 
@@ -99,12 +94,31 @@ that you have to open in your browser. Log in with your Microsoft account and al
 
 and press ENTER. If the authentication is successful, you can choose which drive you want to synchronize and give it a description.
 
+#### OneDrive Personal
+
+On OneDrive Personal, you get a dialog like the following:
+
     1: Tekki / OneDrive Personal
     2: Bonnie Parker / Shared with Tekki
     Select drive [1]:
-    Description [Tekki / Office 365 Personal]:
+    Description [Tekki / OneDrive Personal]:
 
-If you want to keep the proposed values, simply press ENTER.
+To keep the proposed values, simply press ENTER.
+
+#### OneDrive for Business and SharePoint
+
+If you are logged in with a business account, you are asked to provide a SharePoint URL.
+
+    To backup a SharePoint drive, enter the main URL of the site.
+    SharePoint URL []:
+
+The main URL starts with `your_company.sharepoint.com` and ends with `SitePages/Homepage.aspx`.
+If you don't enter a URL, a connection to your OneDrive for Business will be made, otherwise you can choose between the drives of your SharePoint site.
+
+    1: Contoso / Teamwebsite Documents
+    2: Contoso / Teamwebsite ...
+    ...
+    Select drive [1]:
 
 ### Synchronize
 
@@ -134,4 +148,5 @@ You can limit the synchronization to a specified area with
     onedrive.pl -x destination[s]
     onedrive.pl --logout destination[s]
 
-This disconnects the destination from your OneDrive. To revoke all the rights you gave to this program, go to your [Microsoft Account](https://account.live.com/consent/Manage) and delete it from the list. Of course you can authenticate again any time.
+This disconnects the destination from your OneDrive, but keeps the details of the connection and the database of the documents. You can authenticate again any time.
+To revoke all the rights you gave to this program, go to your [Personal Microsoft Account](https://account.live.com/consent/Manage) or to your [Office 365 Business Account](https://portal.office.com/account/#apps) and delete it from the list.
