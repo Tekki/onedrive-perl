@@ -2,7 +2,7 @@ use Mojo::Base -strict;
 use feature 'signatures';
 no warnings 'experimental::signatures';
 
-use Test::More tests => 107;
+use Test::More tests => 104;
 
 use Mojo::File;
 use Mojo::JSON 'decode_json';
@@ -24,9 +24,7 @@ ok my $db = Tekki::Graph::Database->new($tempdir), 'Create db object';
 # add tasks
 
 my @tasks = map { $testitem{$_}{json} }
-  qw|root folder1 folder2 file1_deleted file1 folder2 package1
-  file1_updated file1_renamed file1_moved folder1_renamed
-  file1_moved_again file1_deleted remote_folder|;
+  qw|root folder1 folder2 file1 folder2 package1|;
 my $counter = @tasks;
 
 is $db->add_tasks(\@tasks), $counter, "$counter tasks added";
@@ -110,16 +108,6 @@ subtest 'Content of item in db' => sub {
     for Tekki::Graph::Database->ITEM_FIELDS->@*;
 };
 
-# delete file before it exists
-
-ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
-
-ok $actions = $db->find_differences($item), 'Find differences';
-is_deeply $actions, {}, 'No action';
-
-is $db->task_ignored($task, $item), $db, 'Log entry';
-
 # create file fails
 
 ok $task = $db->next_task, 'Get next task';
@@ -156,16 +144,6 @@ subtest 'Content of item in db' => sub {
     for Tekki::Graph::Database->ITEM_FIELDS->@*;
 };
 
-# skip create folder
-
-ok $task = $db->next_task, 'Get next task';
-ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
-
-ok $actions = $db->find_differences($item), 'Find differences';
-is_deeply $actions, {}, 'No action';
-
-is $db->task_ignored($task, $item), $db, 'Log entry';
-
 # create package
 
 ok $task = $db->next_task, 'Get next task';
@@ -188,6 +166,8 @@ push $log_entries{success}->@*, $log_entry->($item, 'create');
 
 # update first file
 
+is $db->add_tasks([$testitem{file1_updated}{json}]), 1, "1 task added";
+
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
@@ -202,6 +182,8 @@ is $db->task_succeeded($task, $item, 'update'), $db, 'Log entry';
 push $log_entries{success}->@*, $log_entry->($item, 'update');
 
 # rename file
+
+is $db->add_tasks([$testitem{file1_renamed}{json}]), 1, "1 task added";
 
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
@@ -224,6 +206,8 @@ push $log_entries{success}->@*, $log_entry->($item, 'update');
 
 # move file
 
+is $db->add_tasks([$testitem{file1_moved}{json}]), 1, "1 task added";
+
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
@@ -244,6 +228,8 @@ is $db->task_succeeded($task, $item, 'move'), $db, 'Log entry';
 push $log_entries{success}->@*, $log_entry->($item, 'move');
 
 # rename first folder
+
+is $db->add_tasks([$testitem{folder1_renamed}{json}]), 1, "1 task added";
 
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
@@ -266,6 +252,8 @@ push $log_entries{success}->@*, $log_entry->($item, 'move');
 
 # move file again
 
+is $db->add_tasks([$testitem{file1_moved_again}{json}]), 1, "1 task added";
+
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
@@ -287,6 +275,8 @@ push $log_entries{success}->@*, $log_entry->($item, 'move');
 
 # delete file
 
+is $db->add_tasks([$testitem{file1_deleted}{json}]), 1, "1 task added";
+
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
@@ -303,6 +293,8 @@ is $db->task_succeeded($task, $item, 'delete'), $db, 'Log entry';
 push $log_entries{success}->@*, $log_entry->($item, 'delete');
 
 # remote folder
+
+is $db->add_tasks([$testitem{remote_folder}{json}]), 1, "1 task added";
 
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';

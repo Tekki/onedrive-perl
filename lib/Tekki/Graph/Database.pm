@@ -41,7 +41,19 @@ sub add_tasks ($self, $tasklist) {
   my $counter = 0;
   my $db      = $self->handle;
   for my $task ($tasklist->@*) {
-    $db->insert('task', {description => to_json $task});
+    my $item_id = $task->{id};
+    if ($task->{file}) {
+      $db->delete('task', {item_id => $item_id});
+      $db->insert('task', {description => to_json($task), item_id => $item_id});
+    } else {
+      $db->update(
+        'task',
+        {description => to_json($task)},
+        {item_id     => $item_id}
+        )->rows
+        or $db->insert('task',
+        {description => to_json($task), item_id => $item_id});
+    }
     $counter++;
   }
 

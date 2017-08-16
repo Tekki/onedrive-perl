@@ -1,6 +1,6 @@
 use Mojo::Base -strict;
 
-use Test::More tests => 37;
+use Test::More tests => 39;
 
 use Mojo::File;
 use Mojo::JSON 'decode_json';
@@ -21,8 +21,7 @@ ok my $db = Tekki::Graph::Database->new($tempdir), 'Create db object';
 # add tasks
 
 my @tasks = map { $testitem{$_}{json} }
-  qw|root folder1 folder2 folder3 file1 file2 file1_moved
-  file1_deleted folder1_deleted folder2_deleted|;
+  qw|root folder1 folder2 folder3 file1 file2 folder1 folder2 file1 file2|;
 my $counter = @tasks;
 
 is $db->add_tasks(\@tasks), $counter, "$counter tasks added";
@@ -107,6 +106,8 @@ subtest 'Create files' => sub {
 
 # move first file
 
+is $db->add_tasks([$testitem{file1_moved}{json}]), 1, "1 task added";
+
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
@@ -124,6 +125,14 @@ is_deeply $actions, \%expected, 'Action description';
 
 is $db->update_item($item), $db, 'Update item in db';
 is $db->task_succeeded($task, $item, 'move'), $db, 'Log entry';
+
+# add tasks
+
+@tasks = map { $testitem{$_}{json} }
+  qw|file1_deleted folder1_deleted folder2_deleted|;
+$counter = @tasks;
+
+is $db->add_tasks(\@tasks), $counter, "$counter tasks added";
 
 # delete first file
 

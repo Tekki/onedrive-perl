@@ -24,7 +24,6 @@ sub synchronize ($self) {
   $connector->info('Downloading documents');
 
   my $continue      = 1;
-  my $download_more = 1;
   while ($continue) {
 
     # check for existing tasks
@@ -116,10 +115,11 @@ sub synchronize ($self) {
       }
 
     }
-    $continue = 0;
 
     # download new instructions
-    if ($download_more) {
+    my $download_more = 1;
+    my $counter = 0;
+    while ($download_more) {
       my $delta_url = $config->next_link || $config->delta_link;
 
       my $response = $connector->get_authorized($delta_url);
@@ -144,10 +144,10 @@ sub synchronize ($self) {
       }
 
       # add to db
-      my $counter = $db->add_tasks($json->{value});
-      $connector->info("\n$counter new tasks downloaded\n");
-      $continue = $counter ? 1 : 0;
+      $counter += $db->add_tasks($json->{value});
+      $connector->info("$counter new tasks downloaded");
     }
+    $continue = $counter ? 1 : 0;
   }
 
   return $self;
