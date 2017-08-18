@@ -1,7 +1,7 @@
 use Mojo::Base -strict;
 
 use open qw|:std :utf8|;
-use Test::More tests => 44;
+use Test::More tests => 46;
 
 use Mojo::Date;
 use Mojo::File;
@@ -20,11 +20,10 @@ isa_ok $package, $parent;
 
 # constants
 
-my @config_vars
-  = qw|calendar_url contact_url description drive_id drive_type
+my @config_vars = qw|calendar_url contact_url description drive_id drive_type
   drive_url item_id owner remote|;
-my @token_vars
-  = qw|access_token refresh_token scope validto next_link delta_link|;
+my @token_vars =
+  qw|access_token refresh_token scope validto next_link delta_link|;
 
 is $package->CONFIG_FILE, 'onedrive.conf', 'Config file';
 is_deeply $package->CONFIG_VARS, [@config_vars], 'Config vars';
@@ -99,6 +98,15 @@ ok !$config->delta_link, 'No delta link';
 is $config->delta_link($delta_link), $config, 'Set delta link';
 is $config->delta_link, $delta_link, "Delta link is $delta_link";
 ok !$config->next_link, 'No next link';
+
+# convert delta link
+
+is $config->delta_link(
+  'https://graph.microsoft.com/v1.0/me/drive/root/delta?token=aTE09Nj'),
+  $config, 'Set old format delta link';
+is $config->delta_link,
+  'https://graph.microsoft.com/v1.0/me/drive/root/delta?(token=\'aTE09Nj\')',
+  'Link is converted to new format';
 
 # expires and valid to
 
