@@ -57,12 +57,12 @@ sub authenticate ($self) {
   my $url = Mojo::URL->new(AUTH_URL)->query(
     client_id => CLIENT_ID,
     scope =>
-      'calendars.read contacts.read files.read files.read.all user.read offline_access',
+'calendars.read contacts.read files.read files.read.all user.read offline_access',
     response_type => 'code',
     redirect_uri  => REDIRECT_URI,
   );
   say
-    qq|Open the following link in your browser and allow the application to access your drive:\n$url\n|;
+qq|Open the following link in your browser and allow the application to access your drive:\n$url\n|;
 
   print 'Paste the response URL: ';
   chomp(my $in = <STDIN>);
@@ -113,9 +113,8 @@ sub authenticate ($self) {
 
       # SharePoint
 
-      my ($company, $site)
-        = $sharepoint
-        =~ m|(\w+\.sharepoint\.com)/?(.*)/SitePages/Homepage.aspx|;
+      my ($company, $site) =
+        $sharepoint =~ m|(\w+\.sharepoint\.com)/?(.*)/SitePages/Homepage.aspx|;
       die 'Not a SharePoint URL' unless $company;
       $site = $site ? ":/$site:" : '';
 
@@ -145,14 +144,15 @@ sub authenticate ($self) {
       # shared with me
       $tx = $ua->get(GRAPH_URL . '/me/drive/sharedWithMe',
         {Authorization => "Bearer $response->{access_token}"});
-      die $self->_error($tx) if $tx->error;
 
-      for my $shared ($tx->success->json->{value}->@*) {
-        next if $shared->{remoteItem}->{file};
+      if ($tx->success) {
+        for my $shared ($tx->success->json->{value}->@*) {
+          next if $shared->{remoteItem}->{file};
 
-        $shared->{description}
-          = "$shared->{remoteItem}->{createdBy}->{user}->{displayName} / $shared->{name}";
-        push @drives, $shared;
+          $shared->{description} =
+"$shared->{remoteItem}->{createdBy}->{user}->{displayName} / $shared->{name}";
+          push @drives, $shared;
+        }
       }
     }
 
@@ -299,8 +299,8 @@ sub test ($self) {
 
 sub _error ($self, $tx) {
   my $err = $tx->error;
-  my $message
-    = $err->{code}
+  my $message =
+    $err->{code}
     ? "$err->{code} response: $err->{message}"
     : "Connection error: $err->{message}";
   if ($self->verbose) {
