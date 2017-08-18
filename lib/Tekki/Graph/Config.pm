@@ -71,7 +71,6 @@ sub delta_link ($self, $newvalue = undef) {
       $rv = '';
     } elsif ($self->{delta_link}) {
       $rv = $self->{delta_link};
-      $rv =~ s/delta\?token=(.+)/delta?(token='$1')/;
     } elsif ($self->remote) {
       $rv = $self->drive_url . '/items/' . $self->item_id . '/delta';
     } else {
