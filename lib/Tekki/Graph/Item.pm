@@ -84,8 +84,6 @@ sub update ($self, $content) {
     if (my $hashes = $file->{hashes}) {
       $self->sha1(lc $hashes->{sha1Hash}) if $hashes->{sha1Hash};
       $self->quickxor($hashes->{quickXorHash}) if $hashes->{quickXorHash};
-    } else {
-      $self->deleted(1);
     }
   }
 
