@@ -221,10 +221,24 @@ sub db ($self) {
 sub get_authorized ($self, $url) {
   my $token = $self->_get_token;
   my $ua    = Mojo::UserAgent->new;
-  my $tx    = $ua->get($url, {Authorization => "Bearer $token"});
-  die $self->_error($tx) if $tx->error;
-
-  return $tx->success;
+  my $rv;
+  my $try_again = 5;
+  while ($try_again) {
+    my $tx = $ua->get($url, {Authorization => "Bearer $token"});
+    if (my $err = $tx->error) {
+      if (--$try_again) {
+        my $sleep = 60 / $try_again;
+        $self->info("$err->{message}: Waiting $sleep sec before trying again.");
+        sleep $sleep;
+      } else {
+        die $self->_error($err);
+      }
+    } else {
+      $rv = $tx->success;
+      last;
+    }
+  }
+  return $rv;
 }
 
 sub info ($self, $message) {
