@@ -231,7 +231,7 @@ sub get_authorized ($self, $url) {
         $self->info("$err->{message}: Waiting $sleep sec before trying again.");
         sleep $sleep;
       } else {
-        die $self->_error($err);
+        die $self->_error($tx);
       }
     } else {
       $rv = $tx->success;
