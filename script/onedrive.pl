@@ -12,6 +12,7 @@ getopt
   'a|auth'           => \my $auth,
   'd|debug'          => \my $debug,
   'h|help'           => \my $help,
+  'r|resync'         => \my $resync,
   's|sync'           => \my $sync,
   'v|verbose'        => \my $verbose,
   'x|logout'         => \my $logout,
@@ -36,7 +37,10 @@ for my $destination (@ARGV) {
 
   $conn->test if $test;
 
-  if ($sync) {
+  if ($resync) {
+    $conn->config->delta_link('');
+    $conn->synchronize( documents_only => 1);
+  } elsif ($sync) {
     $conn->synchronize(
       {
         calendars_only => $calendars_only,
@@ -60,12 +64,14 @@ onedrive.pl - Perl client for Office 365 services.
 
     onedrive.pl -a destination[s]
     onedrive.pl -s destination[s]
+    onedrive.pl -r -v destination[s]
     onedrive.pl -s -v destination[s]
     onedrive.pl -x destination[s]
 
   Options:
     -a, --auth           Authenticate
     -h, --help           Show this message
+    -r, --resync         Resync, documents only
     -s, --sync           Synchronize
     -v, --verbose        Print information about the progress
     -x, --logout         Logout

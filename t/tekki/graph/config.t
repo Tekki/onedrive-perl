@@ -1,7 +1,7 @@
 use Mojo::Base -strict;
 
 use open qw|:std :utf8|;
-use Test::More tests => 44;
+use Test::More tests => 45;
 
 use Mojo::Date;
 use Mojo::File;
@@ -76,7 +76,7 @@ subtest 'Check values' => sub {
 
 # delta and next link
 
-delete $config->{delta_link};
+is $config->delta_link(''), $config, 'Delete delta link';
 is $config->delta_link, "$sample_config{drive_url}/root/delta",
   'Default delta link for own drive';
 
