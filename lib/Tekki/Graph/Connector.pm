@@ -226,7 +226,7 @@ sub get_authorized ($self, $url) {
   while ($try_again) {
     my $tx = $ua->get($url, {Authorization => "Bearer $token"});
     if (my $err = $tx->error) {
-      if (--$try_again) {
+      if (--$try_again && $err->{message} ne 'Gone') {
         my $sleep = 60 / $try_again;
         $self->info("$err->{message}: Waiting $sleep sec before trying again.");
         sleep $sleep;
