@@ -39,7 +39,7 @@ for my $destination (@ARGV) {
 
   if ($resync) {
     $conn->config->delta_link('');
-    $conn->synchronize( documents_only => 1);
+    $conn->synchronize({documents_only => 1});
   } elsif ($sync) {
     $conn->synchronize(
       {

@@ -170,7 +170,14 @@ sub _download_content ($self, $item, $path) {
   my $json   = $connector->get_authorized($url)->json;
   my $hashes = $json->{file}->{hashes};
   $item->sha1(lc $hashes->{sha1Hash}) if $hashes->{sha1Hash};
-  $item->quickxor($hashes->{quickXorHash}) if $hashes->{quickXorHash};
+  if (my $quickxor = $hashes->{quickXorHash}) {
+    if ($quickxor eq $item->quickxor) {
+      $connector->info('  download skipped');
+      return;
+    } else {
+      $item->quickxor($quickxor);
+    }
+  }
 
   # download
   $url = $json->{'@microsoft.graph.downloadUrl'};
