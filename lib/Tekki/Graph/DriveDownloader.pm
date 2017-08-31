@@ -23,7 +23,7 @@ sub synchronize ($self) {
   $connector->chdir('documents');
   $connector->info('Downloading documents');
 
-  my $continue      = 1;
+  my $continue = 1;
   while ($continue) {
 
     # check for existing tasks
@@ -118,7 +118,7 @@ sub synchronize ($self) {
 
     # download new instructions
     my $download_more = 1;
-    my $counter = 0;
+    my $counter       = 0;
     while ($download_more) {
       my $delta_url = $config->next_link || $config->delta_link;
 
@@ -158,6 +158,7 @@ sub synchronize ($self) {
 sub _download_content ($self, $item, $path) {
   my $connector = $self->{connector};
   my $config    = $connector->config;
+  my $db        = $connector->db;
 
   if ($item->exists_identical) {
     $connector->info('  download skipped');
@@ -171,11 +172,17 @@ sub _download_content ($self, $item, $path) {
   my $hashes = $json->{file}->{hashes};
   $item->sha1(lc $hashes->{sha1Hash}) if $hashes->{sha1Hash};
   if (my $quickxor = $hashes->{quickXorHash}) {
-    if ($quickxor eq $item->quickxor) {
-      $connector->info('  download skipped');
-      return;
-    } else {
+    if ($quickxor ne $item->quickxor) {
       $item->quickxor($quickxor);
+      my $db_item;
+      if ($db_item =
+           $db->find_item($item)
+        && $db_item->{quickxor} eq $quickxor
+        && $item->exists)
+      {
+        $connector->info('  download skipped');
+        return;
+      }
     }
   }
 
