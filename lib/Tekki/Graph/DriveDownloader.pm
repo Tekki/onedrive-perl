@@ -196,9 +196,9 @@ sub _download_content ($self, $item, $path) {
 
   $connector->get_authorized($url)->content->asset->move_to($path);
 
-  if ($config->drive_type eq 'personal') {
+  if ($config->drive_type eq 'personal' && $item->{name} !~ /\.one\w*$/) {
 
-    # not yet working on business
+    # not yet working on business, and not working with OneNote files
     die encode 'UTF-8', "Download of $item->{name} failed!"
       unless $item->exists_identical;
   }
