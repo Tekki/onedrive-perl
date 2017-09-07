@@ -60,8 +60,12 @@ sub add_tasks ($self, $tasklist) {
   return $counter;
 }
 
-sub create_item ($self, $item) {
+sub count_tasks ($self) {
+  my $db = $self->handle;
+  return $db->select('task', 'count(*)')->array->[0];
+}
 
+sub create_item ($self, $item) {
   my $db = $self->handle;
 
   my %params = (item_id => $item->id);

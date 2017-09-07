@@ -35,6 +35,6 @@ is_deeply $package->ITEM_FIELDS, \@fields, 'List of item fields';
 subtest 'Methods' => sub {
   can_ok $package, $_
     for
-    qw|add_tasks create_item delete_item find_item log next_task task_failed|,
-    qw|task_ignored task_succeeded update_item|;
+    qw|add_tasks create_item count_tasks delete_item find_item log next_task|,
+    qw|task_failed task_ignored task_succeeded update_item|;
 };

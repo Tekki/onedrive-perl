@@ -1,6 +1,6 @@
 use Mojo::Base -strict;
 
-use Test::More tests => 13;
+use Test::More tests => 14;
 
 my $package;
 
@@ -19,5 +19,5 @@ isa_ok $package, $parent;
 # methods
 
 can_ok $package, $_
-  for qw|authenticate chdir config db destination info get_authorized logout
-  synchronize verbose|;
+  for qw|authenticate chdir config count_tasks db destination info
+    get_authorized logout synchronize verbose|;

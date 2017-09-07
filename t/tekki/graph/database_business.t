@@ -1,6 +1,6 @@
 use Mojo::Base -strict;
 
-use Test::More tests => 39;
+use Test::More tests => 42;
 
 use Mojo::File;
 use Mojo::JSON 'decode_json';
@@ -25,6 +25,7 @@ my @tasks = map { $testitem{$_}{json} }
 my $counter = @tasks;
 
 is $db->add_tasks(\@tasks), $counter, "$counter tasks added";
+is $db->count_tasks, 6, '6 pending tasks';
 
 # root
 
@@ -107,6 +108,7 @@ subtest 'Create files' => sub {
 # move first file
 
 is $db->add_tasks([$testitem{file1_moved}{json}]), 1, "1 task added";
+is $db->count_tasks, 1, '1 pending task';
 
 ok $task = $db->next_task, 'Get next task';
 ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
@@ -133,6 +135,7 @@ is $db->task_succeeded($task, $item, 'move'), $db, 'Log entry';
 $counter = @tasks;
 
 is $db->add_tasks(\@tasks), $counter, "$counter tasks added";
+is $db->count_tasks, $counter, "$counter pending tasks";
 
 # delete first file
 

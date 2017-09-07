@@ -213,6 +213,10 @@ sub config ($self) {
   return $self->{config};
 }
 
+sub count_tasks ($self) {
+  return $self->db->count_tasks;
+}
+
 sub db ($self) {
   $self->{db} ||= Tekki::Graph::Database->new($self->destination);
   return $self->{db};

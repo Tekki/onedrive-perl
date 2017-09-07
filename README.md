@@ -11,7 +11,7 @@ A Perl client for Office 365 services like OneDrive Personal or OneDrive for Bus
     onedrive.pl -a [-v] /path/to/destination
 
     # synchronize
-    onedrive.pl -s [-v] [-C|-D|-K] /path/to/destination
+    onedrive.pl -s [-c] [-v] [-C|-D|-K] /path/to/destination
 
     # logout
     onedrive.pl -x /path/to/destination
@@ -141,7 +141,11 @@ You can limit the synchronization to a specified area with
     onedrive-pl -s -K destination[s]
     onedrive-pl --synchronize --contacts-only destination[s]
 
-***Crashes:*** At this moment, the program will crash maybe once an hour, especially if errors and timeouts on the side of Microsoft occur. As it develops, these crashes will be less frequent. ***But*** even now you should be able to restart it without creating a single inconsistency.
+To display the number of pending tasks write
+
+onedrive-pl -c destination[s]
+
+***Crashes:*** At this moment, the program will crash maybe once a day, especially if errors on the side of Microsoft occur. As it develops, these crashes will be less frequent. ***But*** even now you should be able to restart it without creating a single inconsistency.
 
 ### Logout
 

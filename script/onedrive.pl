@@ -10,6 +10,7 @@ use Tekki::Graph::Connector;
 
 getopt
   'a|auth'           => \my $auth,
+  'c|count'          => \my $count,
   'd|debug'          => \my $debug,
   'h|help'           => \my $help,
   'r|resync'         => \my $resync,
@@ -37,7 +38,10 @@ for my $destination (@ARGV) {
 
   $conn->test if $test;
 
+  say $conn->count_tasks if $count;
+
   if ($resync) {
+    die 'Cannot resync with pending tasks!' if $conn->count_tasks;
     $conn->config->delta_link('');
     $conn->synchronize({documents_only => 1});
   } elsif ($sync) {
@@ -70,6 +74,7 @@ onedrive.pl - Perl client for Office 365 services.
 
   Options:
     -a, --auth           Authenticate
+    -c, --count          Count pending tasks
     -h, --help           Show this message
     -r, --resync         Resync, documents only
     -s, --sync           Synchronize
