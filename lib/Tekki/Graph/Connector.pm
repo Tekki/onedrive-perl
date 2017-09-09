@@ -260,6 +260,12 @@ sub logout ($self) {
   return $self;
 }
 
+sub resync ($self) {
+    die 'Cannot resync with pending tasks!' if $self->count_tasks;
+    $self->config->delta_link('');
+    $self->synchronize({documents_only => 1});
+}
+
 sub synchronize ($self, $params = {}) {
   my $config = $self->config;
   die 'Not authenticated' unless $config->refresh_token;

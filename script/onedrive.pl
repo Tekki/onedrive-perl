@@ -41,9 +41,7 @@ for my $destination (@ARGV) {
   say $conn->count_tasks if $count;
 
   if ($resync) {
-    die 'Cannot resync with pending tasks!' if $conn->count_tasks;
-    $conn->config->delta_link('');
-    $conn->synchronize({documents_only => 1});
+    $conn->resync;
   } elsif ($sync) {
     $conn->synchronize(
       {
