@@ -58,7 +58,7 @@ sub update ($self, $content) {
 
   # process content
   for (qw|id name|) {
-    $self->$_($content->{$_}) if $content->{$_};
+    $self->$_($content->{$_}) if length $content->{$_};
   }
 
   $self->lastmodified($content->{fileSystemInfo}
