@@ -210,7 +210,7 @@ sub task_succeeded ($self, $task, $item, $action) {
       item_id      => $item->id,
       name         => $item->name,
       lastmodified => $item->lastmodified,
-      modifiedby   => $item->modifiedby,
+      modifiedby   => ($item->modifiedby || ''),
       action       => $action,
       result       => 'success',
     }
@@ -225,6 +225,7 @@ sub update_item ($self, $item) {
 
   my %params = ();
   $params{$_} = $item->$_ for $self->ITEM_FIELDS->@*;
+  $params{modifiedby} ||= '';
   $db->update('item', \%params, {item_id => $item->{id}});
 
   return $self;
