@@ -79,7 +79,7 @@ qq|Open the following link in your browser and allow the application to access y
   );
   my $tx = $ua->post(TOKEN_URL, form => \%form);
   die $self->_error($tx) if $tx->error;
-  my $response = $tx->success->json;
+  my $response = $tx->result->json;
   $self->info('Authentication successful.');
 
   # update config
@@ -96,7 +96,7 @@ qq|Open the following link in your browser and allow the application to access y
     my $tx = $ua->get(GRAPH_URL . '/me/drive',
       {Authorization => "Bearer $response->{access_token}"});
     die $self->_error($tx) if $tx->error;
-    my $own        = $tx->success->json;
+    my $own        = $tx->result->json;
     my $drive_type = $own->{driveType};
     $own->{description} = "$own->{owner}->{user}->{displayName} / Office 365 "
       . ucfirst $drive_type;
@@ -123,14 +123,14 @@ qq|Open the following link in your browser and allow the application to access y
         {Authorization => "Bearer $response->{access_token}"});
       die $self->_error($tx) if $tx->error;
       $company =~ /(.*)\.sharepoint\.com/;
-      my $sitename = ucfirst($1) . ' / ' . $tx->success->json->{displayName};
+      my $sitename = ucfirst($1) . ' / ' . $tx->result->json->{displayName};
 
       # list drives
       $tx = $ua->get(GRAPH_URL . "/sites/$company$site/drives",
         {Authorization => "Bearer $response->{access_token}"});
       die $self->_error($tx) if $tx->error;
 
-      for my $drive ($tx->success->json->{value}->@*) {
+      for my $drive ($tx->result->json->{value}->@*) {
         $drive->{description} = "$sitename $drive->{name}";
         push @drives, $drive;
       }
@@ -145,8 +145,8 @@ qq|Open the following link in your browser and allow the application to access y
       $tx = $ua->get(GRAPH_URL . '/me/drive/sharedWithMe',
         {Authorization => "Bearer $response->{access_token}"});
 
-      if ($tx->success) {
-        for my $shared ($tx->success->json->{value}->@*) {
+      if ($tx->result) {
+        for my $shared ($tx->result->json->{value}->@*) {
           next if $shared->{remoteItem}->{file};
 
           $shared->{description} =
@@ -238,7 +238,7 @@ sub get_authorized ($self, $url) {
         die $self->_error($tx);
       }
     } else {
-      $rv = $tx->success;
+      $rv = $tx->result;
       last;
     }
   }
@@ -304,7 +304,7 @@ sub test ($self) {
       warn $self->_error($tx);
       next;
     }
-    say pp $tx->success->json;
+    say pp $tx->result->json;
 
     if ($self->debug) {
       my $path     = path("$ENV{HOME}/temp")->make_path;
@@ -312,7 +312,7 @@ sub test ($self) {
       $filename =~ s/\W+/_/g;
       my $i = 1;
       $i++ while -f $path->child("$filename$i.txt");
-      $path->child("$filename$i.txt")->spurt($tx->success->body);
+      $path->child("$filename$i.txt")->spurt($tx->result->body);
     }
   }
 
@@ -353,7 +353,7 @@ sub _get_token ($self) {
     );
     my $tx = $ua->post($url, form => \%form);
     die $self->_error($tx) if $tx->error;
-    my $response = $tx->success->json;
+    my $response = $tx->result->json;
     $config->$_($response->{$_}) for qw|scope access_token refresh_token|;
 
     $config->expires_in($response->{expires_in})->save;

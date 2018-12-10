@@ -190,7 +190,7 @@ sub _download_content ($self, $item, $path) {
   $url = $json->{'@microsoft.graph.downloadUrl'};
 
 # size is unreliable!
-#  my $asset_size = $tx->success->content->asset->size;
+#  my $asset_size = $tx->result->content->asset->size;
 #  die "Size of $item->{name} is $asset_size instead of $item->{size}!"
 #    if $asset_size != $item->size;
 
