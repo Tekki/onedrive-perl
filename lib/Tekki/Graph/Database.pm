@@ -209,7 +209,7 @@ sub task_succeeded ($self, $task, $item, $action) {
       timestamp    => Mojo::Date->new->to_datetime,
       item_id      => $item->id,
       name         => $item->name,
-      lastmodified => $item->lastmodified,
+      lastmodified => ($item->lastmodified || ''),
       modifiedby   => ($item->modifiedby || ''),
       action       => $action,
       result       => 'success',
