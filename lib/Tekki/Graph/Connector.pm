@@ -368,7 +368,7 @@ Tekki::Graph::Connector - The connector itself.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2016-2017, Tekki.
+Copyright (C) 2016-2019, Tekki.
 
 This program is free software, you can redistribute it and/or modify it under
 the terms of the Artistic License version 2.0.
