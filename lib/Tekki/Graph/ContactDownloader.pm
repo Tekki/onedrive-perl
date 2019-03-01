@@ -1,7 +1,5 @@
 package Tekki::Graph::ContactDownloader;
-use Mojo::Base -base;
-use feature 'signatures';
-no warnings 'experimental::signatures';
+use Mojo::Base -base, -signatures;
 
 use Mojo::File 'path';
 use Mojo::Util 'encode';

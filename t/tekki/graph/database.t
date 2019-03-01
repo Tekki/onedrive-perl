@@ -1,6 +1,4 @@
-use Mojo::Base -strict;
-use feature 'signatures';
-no warnings 'experimental::signatures';
+use Mojo::Base -base, -signatures;
 
 use Test::More tests => 5;
 

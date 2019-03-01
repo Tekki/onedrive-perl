@@ -1,7 +1,5 @@
 package Tekki::Graph::Event;
-use Mojo::Base -base;
-use feature 'signatures';
-no warnings 'experimental::signatures';
+use Mojo::Base -base, -signatures;
 
 use Data::ICal::Entry::Event;
 use Data::ICal::Entry::Alarm::Display;

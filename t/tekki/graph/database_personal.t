@@ -1,6 +1,4 @@
-use Mojo::Base -strict;
-use feature 'signatures';
-no warnings 'experimental::signatures';
+use Mojo::Base -base, -signatures;
 
 use Test::More tests => 104;
 
@@ -19,12 +17,12 @@ my %testitem
 # test db
 
 ok my $tempdir = Mojo::File::tempdir, 'Create temp folder';
-ok my $db = Tekki::Graph::Database->new($tempdir), 'Create db object';
+ok my $db      = Tekki::Graph::Database->new($tempdir), 'Create db object';
 
 # add tasks
 
-my @tasks = map { $testitem{$_}{json} }
-  qw|root folder1 folder2 file1 folder2 package1|;
+my @tasks
+  = map { $testitem{$_}{json} } qw|root folder1 folder2 file1 folder2 package1|;
 my $counter = @tasks;
 
 is $db->add_tasks(\@tasks), $counter, "$counter tasks added";
@@ -47,8 +45,7 @@ ok my $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok my $actions = $db->find_differences($item), 'Find differences';
 
-my %expected
-  = (create => {name => 'root', full_path => 'root',});
+my %expected = (create => {name => 'root', full_path => 'root',});
 
 is_deeply $actions, \%expected, 'Action description';
 
@@ -63,10 +60,7 @@ ok $item = Tekki::Graph::Item->new($task->{description}), 'Extract item';
 
 ok $actions = $db->find_differences($item), 'Find differences';
 
-%expected
-  = (
-  create => {name => 'Dokumente', full_path => 'Dokumente',}
-  );
+%expected = (create => {name => 'Dokumente', full_path => 'Dokumente',});
 
 is_deeply $actions, \%expected, 'Action description';
 
@@ -90,8 +84,8 @@ ok $actions = $db->find_differences($item), 'Find differences';
 
 %expected = (
   create => {
-    name        => 'Vorlagen',
-    full_path   => 'Dokumente/Vorlagen',
+    name      => 'Vorlagen',
+    full_path => 'Dokumente/Vorlagen',
   }
 );
 
@@ -118,8 +112,8 @@ ok $actions = $db->find_differences($item), 'Find differences';
 
 %expected = (
   create => {
-    name        => 'Testdocument.txt',
-    full_path   => 'Dokumente/Vorlagen/Testdocument.txt',
+    name      => 'Testdocument.txt',
+    full_path => 'Dokumente/Vorlagen/Testdocument.txt',
   }
 );
 
@@ -153,8 +147,8 @@ ok $actions = $db->find_differences($item), 'Find differences';
 
 %expected = (
   create => {
-    name        => 'Notizbuch von Cubulon',
-    full_path   => 'Dokumente/Notizbuch von Cubulon',
+    name      => 'Notizbuch von Cubulon',
+    full_path => 'Dokumente/Notizbuch von Cubulon',
   }
 );
 
@@ -192,9 +186,9 @@ ok $actions = $db->find_differences($item), 'Find differences';
 
 %expected = (
   move => {
-    new_name        => 'Testdocument Renamed.txt',
-    new_path        => 'Dokumente/Vorlagen/Testdocument Renamed.txt',
-    old_path        => 'Dokumente/Vorlagen/Testdocument.txt',
+    new_name => 'Testdocument Renamed.txt',
+    new_path => 'Dokumente/Vorlagen/Testdocument Renamed.txt',
+    old_path => 'Dokumente/Vorlagen/Testdocument.txt',
   }
 );
 
@@ -215,9 +209,9 @@ ok $actions = $db->find_differences($item), 'Find differences';
 
 %expected = (
   move => {
-    new_name        => 'Testdocument Renamed.txt',
-    new_path        => 'Dokumente/Testdocument Renamed.txt',
-    old_path        => 'Dokumente/Vorlagen/Testdocument Renamed.txt',
+    new_name => 'Testdocument Renamed.txt',
+    new_path => 'Dokumente/Testdocument Renamed.txt',
+    old_path => 'Dokumente/Vorlagen/Testdocument Renamed.txt',
   }
 );
 
@@ -238,9 +232,9 @@ ok $actions = $db->find_differences($item), 'Find differences';
 
 %expected = (
   move => {
-    new_name        => 'Documents',
-    new_path        => 'Documents',
-    old_path        => 'Dokumente',
+    new_name => 'Documents',
+    new_path => 'Documents',
+    old_path => 'Dokumente',
   }
 );
 
@@ -261,9 +255,9 @@ ok $actions = $db->find_differences($item), 'Find differences';
 
 %expected = (
   move => {
-    new_name        => 'Testdocument Renamed.txt',
-    new_path        => 'Documents/Vorlagen/Testdocument Renamed.txt',
-    old_path        => 'Documents/Testdocument Renamed.txt',
+    new_name => 'Testdocument Renamed.txt',
+    new_path => 'Documents/Vorlagen/Testdocument Renamed.txt',
+    old_path => 'Documents/Testdocument Renamed.txt',
   }
 );
 

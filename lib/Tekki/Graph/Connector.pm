@@ -1,10 +1,7 @@
 package Tekki::Graph::Connector;
+use Mojo::Base -base, -signatures;
 
-use Mojo::Base -base;
-use feature 'signatures';
-no warnings 'experimental::signatures';
-
-our $VERSION = '0.90';
+our $VERSION = '0.91';
 
 use Data::Dump 'pp';
 use Digest::SHA 'sha1_hex';

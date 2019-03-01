@@ -1,7 +1,5 @@
 package Tekki::Graph::Item;
-use Mojo::Base -base;
-use feature 'signatures';
-no warnings 'experimental::signatures';
+use Mojo::Base -base, -signatures;
 
 use Digest::SHA 'sha1_hex';
 use Mojo::Date;

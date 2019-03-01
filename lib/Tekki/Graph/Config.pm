@@ -1,8 +1,5 @@
 package Tekki::Graph::Config;
-
-use Mojo::Base -base;
-use feature 'signatures';
-no warnings 'experimental::signatures';
+use Mojo::Base -base, -signatures;
 
 use Mojo::Date;
 use Mojo::File 'path';

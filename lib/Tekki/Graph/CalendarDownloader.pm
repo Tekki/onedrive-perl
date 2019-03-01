@@ -1,12 +1,10 @@
 package Tekki::Graph::CalendarDownloader;
-use Mojo::Base -base;
-use feature 'signatures';
-no warnings 'experimental::signatures';
+use Mojo::Base -base, -signatures;
 
 use Data::ICal;
 use Mojo::File 'path';
 use Mojo::JSON 'decode_json';
-use Mojo::Util 'encode';
+use Mojo::Util qw|encode slugify|;
 use Tekki::Graph::Event;
 
 # constructor
@@ -45,10 +43,11 @@ sub synchronize ($self) {
 sub _download_calendar ($self, $calendar) {
   my $connector = $self->{connector};
   my $config    = $connector->config;
+  my $target    = slugify $calendar->{name};
 
-  path($connector->destination, 'calendars', $calendar->{name})
+  path($connector->destination, 'calendars', $target)
     ->remove_tree({keep_root => 1});
-  my $path = $connector->chdir("calendars/$calendar->{name}");
+  my $path = $connector->chdir("calendars/$target");
 
   # download
   my @events;
@@ -71,7 +70,7 @@ sub _download_calendar ($self, $calendar) {
   }
 
   # export to iCalendar files
-  my $prodid = 'Cubulon Graph Backup '. $connector->VERSION;
+  my $prodid  = 'Cubulon Graph Backup ' . $connector->VERSION;
   my $actual  = Data::ICal->new->add_property(prodid => $prodid);
   my $archive = Data::ICal->new->add_property(prodid => $prodid);
 
@@ -84,9 +83,9 @@ sub _download_calendar ($self, $calendar) {
     }
   }
 
-  $path->child("$calendar->{name}_actual.ics")
+  $path->child("${target}_actual.ics")
     ->spurt(encode 'UTF-8', $actual->as_string);
-  $path->child("$calendar->{name}_archive.ics")
+  $path->child("${target}_archive.ics")
     ->spurt(encode 'UTF-8', $archive->as_string);
 
   return $self;
