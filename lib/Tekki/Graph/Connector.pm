@@ -54,12 +54,12 @@ sub authenticate ($self) {
   my $url = Mojo::URL->new(AUTH_URL)->query(
     client_id => CLIENT_ID,
     scope =>
-'calendars.read contacts.read files.read files.read.all user.read offline_access',
+      'calendars.read contacts.read files.read files.read.all user.read offline_access',
     response_type => 'code',
     redirect_uri  => REDIRECT_URI,
   );
   say
-qq|Open the following link in your browser and allow the application to access your drive:\n$url\n|;
+    qq|Open the following link in your browser and allow the application to access your drive:\n$url\n|;
 
   print 'Paste the response URL: ';
   chomp(my $in = <STDIN>);
@@ -110,8 +110,9 @@ qq|Open the following link in your browser and allow the application to access y
 
       # SharePoint
 
-      my ($company, $site) =
-        $sharepoint =~ m|(\w+\.sharepoint\.com)/?(.*)/SitePages/Homepage.aspx|;
+      my ($company, $site)
+        = $sharepoint
+        =~ m|(\w+\.sharepoint\.com)/?(.*)/SitePages/Homepage.aspx|;
       die 'Not a SharePoint URL' unless $company;
       $site = $site ? ":/$site:" : '';
 
@@ -146,8 +147,8 @@ qq|Open the following link in your browser and allow the application to access y
         for my $shared ($tx->result->json->{value}->@*) {
           next if $shared->{remoteItem}->{file};
 
-          $shared->{description} =
-"$shared->{remoteItem}->{createdBy}->{user}->{displayName} / $shared->{name}";
+          $shared->{description}
+            = "$shared->{remoteItem}->{createdBy}->{user}->{displayName} / $shared->{name}";
           push @drives, $shared;
         }
       }
@@ -222,6 +223,7 @@ sub db ($self) {
 sub get_authorized ($self, $url) {
   my $token = $self->_get_token;
   my $ua    = Mojo::UserAgent->new;
+  $ua->max_response_size(0);
   my $rv;
   my $try_again = 5;
   while ($try_again) {
@@ -258,9 +260,9 @@ sub logout ($self) {
 }
 
 sub resync ($self) {
-    die 'Cannot resync with pending tasks!' if $self->count_tasks;
-    $self->config->delta_link('');
-    $self->synchronize({documents_only => 1});
+  die 'Cannot resync with pending tasks!' if $self->count_tasks;
+  $self->config->delta_link('');
+  $self->synchronize({documents_only => 1});
 }
 
 sub synchronize ($self, $params = {}) {
@@ -320,8 +322,8 @@ sub test ($self) {
 
 sub _error ($self, $tx) {
   my $err = $tx->error;
-  my $message =
-    $err->{code}
+  my $message
+    = $err->{code}
     ? "$err->{code} response: $err->{message}"
     : "Connection error: $err->{message}";
   if ($self->verbose) {
