@@ -1,6 +1,9 @@
-requires 'Data::Dump';
-requires 'Data::ICal';
-requires 'IO::Socket::SSL';
-requires 'Mojolicious';
-requires 'Mojo::SQLite';
-requires 'Text::CSV_XS';
+requires 'Data::Dump'               => '1.23';
+requires 'Data::ICal'               => '0.23';
+requires 'Digest::QuickXor'         => '0.03';
+requires 'IO::Socket::SSL'          => '2.066';
+requires 'Mojolicious'              => '8.18';
+requires 'Mojo::File::Role::Digest' => '0.03';
+requires 'Mojo::SQLite'             => '3.003';
+requires 'Print::Colored'           => '0.01';
+requires 'Text::CSV_XS'             => '1.40';
