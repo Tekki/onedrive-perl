@@ -21,16 +21,19 @@ OneDrive-Perl is a backup client for Office 365 services like OneDrive Personal 
 
 OneDrive-Perl needs Perl 5.24.0 or higher. It is recommended to use a [Perlbrew](https://perlbrew.pl) environment. After you have installed perlbrew, type as user:
 
-    perlbrew install 5.28.1
-    perlbrew switch 5.28.1
+    perlbrew install 5.30.1
+    perlbrew switch 5.30.1
 
 Next you need the most recent versions of the following Perl modules:
-  * Data::Dump
-  * Data::ICal
-  * IO::Socket::SSL
-  * Mojolicious
-  * Mojo::SQLite
-  * Text::CSV\_XS
+  * [Data::Dump](https://metacpan.org/pod/Data::Dump)
+  * [Data::ICal](https://metacpan.org/pod/Data::ICal)
+  * [Digest::QuickXor](https://metacpan.org/pod/Digest::QuickXor)
+  * [IO::Socket::SSL](https://metacpan.org/pod/IO::Socket::SSL)
+  * [Mojolicious](https://metacpan.org/pod/Mojolicious)
+  * [Mojo::File::Role::Digest](https://metacpan.org/pod/Mojo::File::Role::Digest)
+  * [Mojo::SQLite](https://metacpan.org/pod/Mojo::SQLite)
+  * [Print::Colored](https://metacpan.org/pod/Print::Colored)
+  * [Text::CSV\_XS](https://metacpan.org/pod/Text::CSV\_XS)
 
 Don't use the outdated packages included in your distribution, instead install them from CPAN with
 

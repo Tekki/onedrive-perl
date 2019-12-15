@@ -9,6 +9,7 @@ use Mojo::File 'path';
 use Mojo::URL;
 use Mojo::UserAgent;
 use Mojo::Util qw|decode encode|;
+use Print::Colored ':all';
 
 use Tekki::Graph::CalendarDownloader;
 use Tekki::Graph::Config;
@@ -20,13 +21,12 @@ use Tekki::Graph::Item;
 # constants
 
 use constant {
-  AUTH_URL  => 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-  BETA_URL  => 'https://graph.microsoft.com/beta',
-  CLIENT_ID => '5a968bc0-ba11-4d28-8837-16f5a8a825aa',
-  GRAPH_URL => 'https://graph.microsoft.com/v1.0',
-  REDIRECT_URI =>
-    'https://login.microsoftonline.com/common/oauth2/nativeclient',
-  TOKEN_URL => 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+  AUTH_URL     => 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+  BETA_URL     => 'https://graph.microsoft.com/beta',
+  CLIENT_ID    => '5a968bc0-ba11-4d28-8837-16f5a8a825aa',
+  GRAPH_URL    => 'https://graph.microsoft.com/v1.0',
+  REDIRECT_URI => 'https://login.microsoftonline.com/common/oauth2/nativeclient',
+  TOKEN_URL    => 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
 };
 
 # constructor
@@ -53,18 +53,16 @@ sub authenticate ($self) {
   # get authorization code
   my $url = Mojo::URL->new(AUTH_URL)->query(
     client_id => CLIENT_ID,
-    scope =>
-      'calendars.read contacts.read files.read files.read.all user.read offline_access',
+    scope     => 'calendars.read contacts.read files.read files.read.all user.read offline_access',
     response_type => 'code',
     redirect_uri  => REDIRECT_URI,
   );
-  say
-    qq|Open the following link in your browser and allow the application to access your drive:\n$url\n|;
+  say qq|Open the following link in your browser and allow the application to access your drive:|;
+  say_info qq|$url\n|;
 
-  print 'Paste the response URL: ';
-  chomp(my $in = <STDIN>);
+  my $in   = prompt_input 'Paste the response URL 1: ', -stdio;
   my $code = Mojo::URL->new($in)->query->param('code')
-    or die 'URL contains no code';
+    or die color_error 'URL contains no code';
 
   # redeem code for access tokens
   my $ua   = Mojo::UserAgent->new;
@@ -77,7 +75,7 @@ sub authenticate ($self) {
   my $tx = $ua->post(TOKEN_URL, form => \%form);
   die $self->_error($tx) if $tx->error;
   my $response = $tx->result->json;
-  $self->info('Authentication successful.');
+  $self->info(color_ok 'Authentication successful.');
 
   # update config
   $config->$_($response->{$_}) for qw|scope access_token refresh_token|;
@@ -90,30 +88,27 @@ sub authenticate ($self) {
     my $ua = Mojo::UserAgent->new;
 
     # my own
-    my $tx = $ua->get(GRAPH_URL . '/me/drive',
-      {Authorization => "Bearer $response->{access_token}"});
+    my $tx
+      = $ua->get(GRAPH_URL . '/me/drive', {Authorization => "Bearer $response->{access_token}"});
     die $self->_error($tx) if $tx->error;
     my $own        = $tx->result->json;
     my $drive_type = $own->{driveType};
-    $own->{description} = "$own->{owner}->{user}->{displayName} / Office 365 "
-      . ucfirst $drive_type;
+    $own->{description}
+      = "$own->{owner}->{user}->{displayName} / Office 365 " . ucfirst $drive_type;
 
     # ask for SharePoint URL if on business
     my $sharepoint;
     if ($drive_type eq 'business') {
       say 'To backup a SharePoint drive, enter the main URL of the site.';
-      print 'SharePoint URL []: ';
-      chomp($sharepoint = <STDIN>);
+      $sharepoint = prompt_input 'SharePoint URL []: ';
     }
 
     if ($sharepoint) {
 
       # SharePoint
 
-      my ($company, $site)
-        = $sharepoint
-        =~ m|(\w+\.sharepoint\.com)/?(.*)/SitePages/Homepage.aspx|;
-      die 'Not a SharePoint URL' unless $company;
+      my ($company, $site) = $sharepoint =~ m|(\w+\.sharepoint\.com)/?(.*)/SitePages/Homepage.aspx|;
+      die color_error 'Not a SharePoint URL' unless $company;
       $site = $site ? ":/$site:" : '';
 
       # name of the site
@@ -157,45 +152,39 @@ sub authenticate ($self) {
     # select drive
     my $i;
     say encode 'UTF-8', sprintf("%3d: %s", ++$i, $_->{description}) for @drives;
-    print 'Select drive [1]: ';
-    chomp($in = <STDIN>);
+    $in = prompt_input 'Select drive [1]: ';
     $in ||= 1;
     my $drive = $drives[$in - 1];
 
     # set config data
-    print encode 'UTF-8', "Description [$drive->{description}]: ";
-    chomp($in = <STDIN>);
-    $in = decode 'UTF-8', $in;
+    $in = decode 'UTF-8', prompt_input encode 'UTF-8', "Description [$drive->{description}]: ";
     $config->description($in || $drive->{description});
     $config->drive_type($drive_type);
     if (my $remote = $drive->{remoteItem}) {
 
       # shared folder
-      $config->item_id($remote->{id})
-        ->drive_id($remote->{parentReference}->{driveId})
+      $config->item_id($remote->{id})->drive_id($remote->{parentReference}->{driveId})
         ->drive_url(GRAPH_URL . "/drives/$remote->{parentReference}->{driveId}")
         ->owner($remote->{createdBy}->{user}->{displayName})->remote(1);
 
     } elsif ($sharepoint) {
 
       # SharePoint drive
-      $config->drive_id($drive->{id})
-        ->drive_url(GRAPH_URL . "/drives/$drive->{id}")
+      $config->drive_id($drive->{id})->drive_url(GRAPH_URL . "/drives/$drive->{id}")
         ->owner($drive->{owner}->{user}->{displayName});
 
     } else {
 
       # my own drive
-      $config->calendar_url(GRAPH_URL . '/me/calendars')
-        ->contact_url(GRAPH_URL . '/me/contacts')->drive_id($drive->{id})
-        ->drive_url(GRAPH_URL . '/me/drive')
+      $config->calendar_url(GRAPH_URL . '/me/calendars')->contact_url(GRAPH_URL . '/me/contacts')
+        ->drive_id($drive->{id})->drive_url(GRAPH_URL . '/me/drive')
         ->owner($drive->{owner}->{user}->{displayName});
 
     }
 
   }
   $config->save;
-  $self->info('Config written.');
+  $self->info(color_ok 'Config written.');
 
   return $self;
 }
