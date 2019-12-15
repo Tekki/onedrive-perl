@@ -71,8 +71,15 @@ sub synchronize ($self) {
       if (my $move = $actions->{move}) {
         unless ($item->{root}) {
 
-          # move local file
-          $move->{old_path}->move_to($move->{new_path});
+          # move or create local file
+          if (-e $move->{old_path}) {
+            $move->{old_path}->move_to($move->{new_path});
+          } elsif ($item->{file}) {
+            $self->_download_content($item, $move->{new_path});
+          } else {
+            $move->{new_path}->make_path;
+          }
+
           $connector->info("  moved to $move->{new_path}");
 
           # change modification time
