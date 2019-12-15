@@ -4,6 +4,7 @@ use Mojo::Base -base, -signatures;
 use Digest::SHA 'sha1_hex';
 use Mojo::Date;
 use Mojo::File;
+use Mojo::File::Role::Digest;    # just to be sure
 use Mojo::Util qw|decode url_unescape|;
 
 # constructor
@@ -32,18 +33,19 @@ sub exists ($self) {
 }
 
 sub exists_identical ($self) {
+  my $rv = $self->exists;
   if ($self->file) {
-    return $self->exists
-      && sha1_hex($self->full_path->slurp) eq $self->sha1 ? 1 : 0;
-  } else {
-    return $self->exists;
+    my $path = $self->full_path;
+    $rv &&= $path->sha1_sum eq $self->sha1          if $self->sha1;
+    $rv &&= $path->quickxor_hash eq $self->quickxor if $self->quickxor;
   }
+  return $rv;
 }
 
 sub full_path ($self) {
   my @path = ($self->name);
   unshift @path, $self->parent_path if $self->parent_path;
-  return Mojo::File::path(@path);
+  return Mojo::File::path(@path)->with_roles('+Digest');
 }
 
 sub mtime ($self) {
@@ -59,9 +61,11 @@ sub update ($self, $content) {
     $self->$_($content->{$_}) if length $content->{$_};
   }
 
-  $self->lastmodified($content->{fileSystemInfo}
+  $self->lastmodified(
+      $content->{fileSystemInfo}
     ? $content->{fileSystemInfo}->{lastModifiedDateTime}
-    : $content->{lastModifiedDateTime});
+    : $content->{lastModifiedDateTime}
+  );
   $self->modifiedby($content->{lastModifiedBy}->{user}->{displayName})
     if $content->{lastModifiedBy};
 

@@ -176,20 +176,7 @@ sub _download_content ($self, $item, $path) {
   my $json   = $connector->get_authorized($url)->json;
   my $hashes = $json->{file}->{hashes};
   $item->sha1(lc $hashes->{sha1Hash}) if $hashes->{sha1Hash};
-  if (my $quickxor = $hashes->{quickXorHash}) {
-    if ($quickxor ne $item->quickxor) {
-      $item->quickxor($quickxor);
-      my $db_item;
-      if ($db_item =
-           $db->find_item($item)
-        && $db_item->{quickxor} eq $quickxor
-        && $item->exists)
-      {
-        $connector->info('  download skipped');
-        return;
-      }
-    }
-  }
+  $item->quickxor($hashes->{quickXorHash}) if $hashes->{quickXorHash};
 
   # download
   $url = $json->{'@microsoft.graph.downloadUrl'};
@@ -201,9 +188,8 @@ sub _download_content ($self, $item, $path) {
 
   $connector->get_authorized($url)->content->asset->move_to($path);
 
-  if ($config->drive_type eq 'personal' && $item->{name} !~ /\.one\w*$/) {
-
-    # not yet working on business, and not working with OneNote files
+  if ($item->{name} !~ /\.one\w*$/) {
+    # not working with OneNote files
     die encode 'UTF-8', "Download of $item->{name} failed!"
       unless $item->exists_identical;
   }
