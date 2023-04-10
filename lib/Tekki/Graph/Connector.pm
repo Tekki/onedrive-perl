@@ -212,7 +212,7 @@ sub db ($self) {
 sub get_authorized ($self, $url) {
   my $token = $self->_get_token;
   my $ua    = Mojo::UserAgent->new;
-  $ua->max_response_size(0);
+  $ua->max_response_size(0)->max_redirects(10);
   my $rv;
   my $try_again = 5;
   while ($try_again) {
